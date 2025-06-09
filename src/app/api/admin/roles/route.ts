@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { google } from 'googleapis';
-import { getGoogleSheetsClient, getAllUserRoles } from '@/lib/google-sheets';
+import { GoogleSheetsService } from '@/lib/google-sheets';
+import { UserRole } from '@/types/auth';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.roles?.includes('admin')) {
+    if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const users = await getAllUserRoles();
-    return NextResponse.json(users);
+    const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
+    const roles = await sheetsService.getUserRoles(session.user.email);
+    return NextResponse.json(roles);
   } catch (error) {
     console.error('Error fetching roles:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
@@ -22,7 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.roles?.includes('admin')) {
+    if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -31,39 +32,34 @@ export async function POST(request: Request) {
       return new NextResponse('Invalid request', { status: 400 });
     }
 
-    const sheets = await getGoogleSheetsClient();
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    // Validate roles
+    const validRoles = roles.filter((role): role is UserRole => 
+      ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'].includes(role)
+    );
+
+    if (validRoles.length === 0) {
+      return new NextResponse('Invalid roles', { status: 400 });
+    }
+
+    const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
     const range = 'UserRoles!A:B';
 
     // Get existing data
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values || [];
-    const existingRowIndex = rows.findIndex(row => row[0] === email);
+    const rows = await sheetsService.getRange(range);
+    const existingRowIndex = rows.findIndex((row: string[]) => row[0] === email);
 
     if (existingRowIndex >= 0) {
       // Update existing user
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `UserRoles!B${existingRowIndex + 1}`,
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[roles.join(', ')]],
-        },
-      });
+      await sheetsService.updateRow(
+        `UserRoles!B${existingRowIndex + 1}`,
+        [validRoles.join(', ')]
+      );
     } else {
       // Add new user
-      await sheets.spreadsheets.values.append({
-        spreadsheetId,
+      await sheetsService.appendRow(
         range,
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[email, roles.join(', ')]],
-        },
-      });
+        [email, validRoles.join(', ')]
+      );
     }
 
     return new NextResponse('Success', { status: 200 });
@@ -76,7 +72,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.roles?.includes('admin')) {
+    if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -85,29 +81,28 @@ export async function PUT(request: Request) {
       return new NextResponse('Invalid request', { status: 400 });
     }
 
-    const sheets = await getGoogleSheetsClient();
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    // Validate roles
+    const validRoles = roles.filter((role): role is UserRole => 
+      ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'].includes(role)
+    );
+
+    if (validRoles.length === 0) {
+      return new NextResponse('Invalid roles', { status: 400 });
+    }
+
+    const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
     const range = 'UserRoles!A:B';
 
     // Get existing data
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values || [];
-    const existingRowIndex = rows.findIndex(row => row[0] === email);
+    const rows = await sheetsService.getRange(range);
+    const existingRowIndex = rows.findIndex((row: string[]) => row[0] === email);
 
     if (existingRowIndex >= 0) {
       // Update existing user
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `UserRoles!B${existingRowIndex + 1}`,
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[roles.join(', ')]],
-        },
-      });
+      await sheetsService.updateRow(
+        `UserRoles!B${existingRowIndex + 1}`,
+        [validRoles.join(', ')]
+      );
     } else {
       return new NextResponse('User not found', { status: 404 });
     }
@@ -122,7 +117,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.roles?.includes('admin')) {
+    if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -132,38 +127,25 @@ export async function DELETE(request: Request) {
       return new NextResponse('Email is required', { status: 400 });
     }
 
-    const sheets = await getGoogleSheetsClient();
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
     const range = 'UserRoles!A:B';
 
     // Get existing data
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values || [];
-    const existingRowIndex = rows.findIndex(row => row[0] === email);
+    const rows = await sheetsService.getRange(range);
+    const existingRowIndex = rows.findIndex((row: string[]) => row[0] === email);
 
     if (existingRowIndex >= 0) {
       // Delete the row
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId,
-        requestBody: {
-          requests: [
-            {
-              deleteDimension: {
-                range: {
-                  sheetId: 0, // You might need to get the actual sheet ID
-                  dimension: 'ROWS',
-                  startIndex: existingRowIndex,
-                  endIndex: existingRowIndex + 1,
-                },
-              },
-            },
-          ],
+      await sheetsService.batchUpdate([{
+        deleteDimension: {
+          range: {
+            sheetId: 0,
+            dimension: 'ROWS',
+            startIndex: existingRowIndex,
+            endIndex: existingRowIndex + 1,
+          },
         },
-      });
+      }]);
     } else {
       return new NextResponse('User not found', { status: 404 });
     }

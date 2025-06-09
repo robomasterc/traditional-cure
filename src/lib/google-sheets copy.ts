@@ -1,9 +1,6 @@
 import { google } from 'googleapis';
 import { sheets_v4 } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
-import { getServerSession } from 'next-auth';
-import { authOptions } from './auth';
-import { UserRole } from '../types/auth';
 import {
   Patient, patientSchema,
   Consultation, consultationSchema,
@@ -13,11 +10,6 @@ import {
   Transaction, transactionSchema,
   SHEET_NAMES
 } from '../types/sheets';
-
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const ROLES_SHEET_NAME = process.env.GOOGLE_SHEETS_ROLES_SHEET_NAME;
-const DATA_SHEET_NAME = process.env.GOOGLE_SHEETS_DATA_SHEET_NAME;
-const VALID_ROLES: UserRole[] = ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'];
 
 export class GoogleSheetsService {
   private auth: any;
@@ -31,80 +23,41 @@ export class GoogleSheetsService {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       },
-      scopes: SCOPES,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     this.sheets = google.sheets({ version: 'v4', auth: this.auth });
   }
 
   // Helper methods
-  async getRange(range: string): Promise<any[][]> {
+  private async getSheetData(sheetName: string): Promise<any[][]> {
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.spreadsheetId,
-      range,
+      range: `${sheetName}!A:Z`,
     });
     return response.data.values || [];
   }
 
-  async appendRow(range: string, values: any[]): Promise<void> {
+  private async appendRow(sheetName: string, values: any[]): Promise<void> {
     await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.spreadsheetId,
-      range,
+      range: `${sheetName}!A:Z`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [values] },
     });
   }
 
-  async updateRow(range: string, values: any[]): Promise<void> {
+  private async updateRow(sheetName: string, rowIndex: number, values: any[]): Promise<void> {
     await this.sheets.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
-      range,
+      range: `${sheetName}!A${rowIndex + 1}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [values] },
     });
-  }
-
-  async batchUpdate(requests: sheets_v4.Schema$Request[]): Promise<void> {
-    await this.sheets.spreadsheets.batchUpdate({
-      spreadsheetId: this.spreadsheetId,
-      requestBody: { requests },
-    });
-  }
-
-  // Role management
-  async getUserRoles(email: string): Promise<UserRole[]> {
-    try {
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId: this.spreadsheetId,
-        range: `${ROLES_SHEET_NAME}!A:B`,
-      });
-
-      const rows = response.data.values;
-      if (!rows || rows.length === 0) {
-        console.error('❌ No data found in Google Sheet');
-        return [];
-      }
-
-      const userRow = rows.slice(1).find((row: any[]) => row[0]?.toLowerCase() === email.toLowerCase());
-      if (!userRow) {
-        console.error('❌ No roles found for email:', email);
-        return [];
-      }
-
-      const roles = userRow[1]?.split(',').map((role: string) => role.trim()) || [];
-      const validRoles = roles.filter((role: string): role is UserRole => 
-        VALID_ROLES.includes(role as UserRole)
-      );
-
-      return validRoles;
-    } catch (error) {
-      console.error('❌ Error fetching roles:', error);
-      return [];
-    }
   }
 
   // Patient methods
   async getPatients(): Promise<Patient[]> {
-    const rows = await this.getRange(SHEET_NAMES.PATIENTS);
+    const rows = await this.getSheetData(SHEET_NAMES.PATIENTS);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const patient = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -125,7 +78,7 @@ export class GoogleSheetsService {
   }
 
   async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient> {
-    const rows = await this.getRange(SHEET_NAMES.PATIENTS);
+    const rows = await this.getSheetData(SHEET_NAMES.PATIENTS);
     const rowIndex = rows.findIndex(row => row[0] === id);
     if (rowIndex === -1) throw new Error('Patient not found');
 
@@ -135,13 +88,13 @@ export class GoogleSheetsService {
       updatedAt: new Date().toISOString(),
     };
     const validatedPatient = patientSchema.parse(updatedPatient);
-    await this.updateRow(SHEET_NAMES.PATIENTS, Object.values(validatedPatient));
+    await this.updateRow(SHEET_NAMES.PATIENTS, rowIndex, Object.values(validatedPatient));
     return validatedPatient;
   }
 
   // Inventory methods
   async getInventory(): Promise<Inventory[]> {
-    const rows = await this.getRange(SHEET_NAMES.INVENTORY);
+    const rows = await this.getSheetData(SHEET_NAMES.INVENTORY);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const item = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -150,7 +103,7 @@ export class GoogleSheetsService {
   }
 
   async updateInventory(id: string, item: Partial<Inventory>): Promise<Inventory> {
-    const rows = await this.getRange(SHEET_NAMES.INVENTORY);
+    const rows = await this.getSheetData(SHEET_NAMES.INVENTORY);
     const rowIndex = rows.findIndex(row => row[0] === id);
     if (rowIndex === -1) throw new Error('Inventory item not found');
 
@@ -160,13 +113,13 @@ export class GoogleSheetsService {
       updatedAt: new Date().toISOString(),
     };
     const validatedItem = inventorySchema.parse(updatedItem);
-    await this.updateRow(SHEET_NAMES.INVENTORY, Object.values(validatedItem));
+    await this.updateRow(SHEET_NAMES.INVENTORY, rowIndex, Object.values(validatedItem));
     return validatedItem;
   }
 
   // Consultation methods
   async getConsultations(): Promise<Consultation[]> {
-    const rows = await this.getRange(SHEET_NAMES.CONSULTATIONS);
+    const rows = await this.getSheetData(SHEET_NAMES.CONSULTATIONS);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const consultation = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -188,7 +141,7 @@ export class GoogleSheetsService {
 
   // Prescription methods
   async getPrescriptions(): Promise<Prescription[]> {
-    const rows = await this.getRange(SHEET_NAMES.PRESCRIPTIONS);
+    const rows = await this.getSheetData(SHEET_NAMES.PRESCRIPTIONS);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const prescription = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -210,7 +163,7 @@ export class GoogleSheetsService {
 
   // Staff methods
   async getStaff(): Promise<Staff[]> {
-    const rows = await this.getRange(SHEET_NAMES.STAFF);
+    const rows = await this.getSheetData(SHEET_NAMES.STAFF);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const staff = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -219,7 +172,7 @@ export class GoogleSheetsService {
   }
 
   async updateStaff(id: string, staff: Partial<Staff>): Promise<Staff> {
-    const rows = await this.getRange(SHEET_NAMES.STAFF);
+    const rows = await this.getSheetData(SHEET_NAMES.STAFF);
     const rowIndex = rows.findIndex(row => row[0] === id);
     if (rowIndex === -1) throw new Error('Staff member not found');
 
@@ -229,13 +182,13 @@ export class GoogleSheetsService {
       updatedAt: new Date().toISOString(),
     };
     const validatedStaff = staffSchema.parse(updatedStaff);
-    await this.updateRow(SHEET_NAMES.STAFF, Object.values(validatedStaff));
+    await this.updateRow(SHEET_NAMES.STAFF, rowIndex, Object.values(validatedStaff));
     return validatedStaff;
   }
 
   // Transaction methods
   async getTransactions(): Promise<Transaction[]> {
-    const rows = await this.getRange(SHEET_NAMES.TRANSACTIONS);
+    const rows = await this.getSheetData(SHEET_NAMES.TRANSACTIONS);
     const headers = rows[0];
     return rows.slice(1).map(row => {
       const transaction = Object.fromEntries(headers.map((header, i) => [header, row[i]]));
@@ -307,7 +260,3 @@ export class GoogleSheetsService {
     });
   }
 }
-
-// Create default instance for role management
-const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
-export const getUserRoles = (email: string) => sheetsService.getUserRoles(email);

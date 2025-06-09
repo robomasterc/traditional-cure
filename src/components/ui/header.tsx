@@ -28,7 +28,7 @@ export function Header({
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Typography variant="h4" className="text-gray-900">
-              Happy Health
+              {process.env.NEXT_PUBLIC_TAGLINE}
             </Typography>
           </div>
           
@@ -46,9 +46,6 @@ export function Header({
             
             {showAuth ? (
               <>
-                <Link href="/dashboard/test">
-                  <Button variant="outline">Test</Button>
-                </Link>
                 <Link href="/auth/signin">
                   <Button variant="outline">Sign In</Button>
                 </Link>
