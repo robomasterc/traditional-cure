@@ -124,42 +124,6 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
           </Button>
         </div>
 
-        {/* User Info */}
-        {!isCollapsed && (
-          <div className="p-4 border-b border-gray-200 relative">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={toggleUserRoles}
-                className="p-2 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
-              >
-                <User size={20} className="text-green-600 " />
-              </button>
-              <Typography>{userName}</Typography>
-            </div>
-            
-            {/* Roles Dropdown */}
-            {showUserRoles && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                <div className="p-3">
-                  <Typography variant="small" className="text-gray-500 mb-2">
-                    Your Roles
-                  </Typography>
-                  <div className="space-y-1">
-                    {userRoles.map((role) => (
-                      <div
-                        key={role}
-                        className="px-2 py-1 bg-gray-50 rounded text-sm text-gray-700"
-                      >
-                        {role}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-2">
           {accessibleItems.map((item) => (
@@ -197,6 +161,53 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
             </div>
           ))}
         </nav>
+
+        {/* User Info */}
+        <div className="p-4 border-t border-gray-200 relative">
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={toggleUserRoles}
+              variant="ghost"
+              size="icon"
+              className="p-2 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
+            >
+              <User size={20} className="text-green-600" />
+            </Button>
+            {!isCollapsed && (
+              <Typography 
+                onClick={toggleUserRoles}
+                className="cursor-pointer hover:text-primary-600 transition-colors"
+              >
+                {userName}
+              </Typography>
+            )}
+            
+          </div>
+          
+          {/* Roles Dropdown */}
+          {showUserRoles && (
+            <div className={cn(
+              "absolute bg-white rounded-md shadow-lg border border-gray-200 z-10",
+              isCollapsed ? "left-16 bottom-0 w-48" : "left-0 bottom-full mb-2 w-48"
+            )}>
+              <div className="p-3">
+                <Typography variant="small" className="text-gray-500 mb-2">
+                  Your Roles
+                </Typography>
+                <div className="space-y-1">
+                  {userRoles.map((role) => (
+                    <div
+                      key={role}
+                      className="px-2 py-1 bg-gray-50 rounded text-sm text-gray-700"
+                    >
+                      {role}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">

@@ -39,7 +39,7 @@ export default function HomePage() {
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <Typography variant="h1" className="text-4xl tracking-tight font-extrabold text-green-600 sm:text-5xl md:text-6xl">
-                  <span className="block">'Agasthya'</span>
+                  <span className="block text-red-400">❛Agasthya❜</span>
                   <span className="block text-primary-600">Traditional Cure</span>
                 </Typography>
                 <Typography variant="p" className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
@@ -81,20 +81,18 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10">
-            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
               {features.map((feature) => (
-                <div key={feature.name} className="relative">
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                <div key={feature.name} className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white mb-4">
                     <feature.icon className="h-6 w-6" aria-hidden="true" />
                   </div>
-                  <div className="ml-16">
-                    <Typography variant="h4" className="text-lg leading-6 font-medium text-gray-900">
-                      {feature.name}
-                    </Typography>
-                    <Typography variant="p" className="mt-2 text-base text-gray-500">
-                      {feature.description}
-                    </Typography>
-                  </div>
+                  <Typography variant="h4" className="text-lg leading-6 font-medium text-gray-900">
+                    {feature.name}
+                  </Typography>
+                  <Typography variant="p" className="mt-2 text-base text-gray-500">
+                    {feature.description}
+                  </Typography>
                 </div>
               ))}
             </div>
