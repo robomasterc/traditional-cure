@@ -123,6 +123,8 @@ export class GoogleSheetsService {
 
     try {
       console.log('🔍 Fetching roles for email:', email);
+      console.log('ROLES_SHEET_NAME', ROLES_SHEET_NAME);
+      console.log('SPREADSHEET_ID', SPREADSHEET_ID);
       
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
