@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { Typography } from './typography';
 import { Button } from './button';
 import { ChevronLeft, ChevronRight, LayoutDashboard, User, Pill, DollarSign, Package } from 'lucide-react';
-import Image from 'next/image';
 
 interface SidebarProps {
   userRoles: string[];
@@ -110,76 +109,20 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={32}
-              height={32}
-              className="h-8 w-auto"
-            />
-          </div>
+          {!isCollapsed && (
+            <Typography variant="h4" className="text-gray-900">
+              ATC
+            </Typography>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={toggleSidebar}
             className="ml-auto"
           >
-            {isCollapsed ? <ChevronRight size={10} /> : <ChevronLeft size={10} />}
+            {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </Button>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto">
-          <ul className="space-y-1 p-2">
-            {accessibleItems.map((item) => (
-              <li key={item.href}>
-                <div>
-                  <button
-                    onClick={() => item.submenu && toggleSubmenu(item.label)}
-                    className={cn(
-                      "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900",
-                      pathname === item.href && "bg-gray-100 text-gray-900"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 text-green-600" />
-                    {!isCollapsed && (
-                      <>
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {item.submenu && (
-                          <ChevronRight
-                            size={16}
-                            className={cn(
-                              "transition-transform",
-                              expandedMenu === item.label && "rotate-90"
-                            )}
-                          />
-                        )}
-                      </>
-                    )}
-                  </button>
-                  {!isCollapsed && item.submenu && expandedMenu === item.label && (
-                    <ul className="mt-1 ml-6 space-y-1">
-                      {item.submenu.map((subItem) => (
-                        <li key={subItem.href}>
-                          <Link
-                            href={subItem.href}
-                            className={cn(
-                              "block rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900",
-                              pathname === subItem.href && "bg-gray-100 text-gray-900"
-                            )}
-                          >
-                            {subItem.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </nav>
 
         {/* User Info */}
         {!isCollapsed && (
@@ -189,18 +132,14 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                 onClick={toggleUserRoles}
                 className="p-2 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
               >
-                <User size={20} className="text-green-600" />
+                <User size={20} className="text-green-600 " />
               </button>
               <Typography>{userName}</Typography>
             </div>
-
+            
             {/* Roles Dropdown */}
             {showUserRoles && (
-              <div className="fixed w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50" 
-                   style={{ 
-                     bottom: '80px',
-                     left: '20px'
-                   }}>
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                 <div className="p-3">
                   <Typography variant="small" className="text-gray-500 mb-2">
                     Your Roles
@@ -220,6 +159,44 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
             )}
           </div>
         )}
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-2">
+          {accessibleItems.map((item) => (
+            <div key={item.href}>
+              <button
+                onClick={() => toggleSubmenu(item.label)}
+                className={cn(
+                  "w-full flex items-center p-2 rounded-md hover:bg-gray-100",
+                  pathname.startsWith(item.href) && "bg-gray-100"
+                )}
+              >
+                <item.icon size={20} className="text-green-600" />
+                {!isCollapsed && (
+                  <Typography className="ml-3">{item.label}</Typography>
+                )}
+              </button>
+
+              {/* Submenu */}
+              {!isCollapsed && expandedMenu === item.label && item.submenu && (
+                <div className="ml-8 mt-1 space-y-1">
+                  {item.submenu.map((subItem) => (
+                    <Link
+                      key={subItem.href}
+                      href={subItem.href}
+                      className={cn(
+                        "block p-2 rounded-md hover:bg-gray-100",
+                        pathname === subItem.href && "bg-gray-100"
+                      )}
+                    >
+                      <Typography variant="small">{subItem.label}</Typography>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">

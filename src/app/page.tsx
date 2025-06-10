@@ -39,8 +39,8 @@ export default function HomePage() {
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <Typography variant="h1" className="text-4xl tracking-tight font-extrabold text-green-600 sm:text-5xl md:text-6xl">
-                  <span className="block text-red-400">❛{process.env.NEXT_PUBLIC_COMPANY_NAME}❜</span>
-                  <span className="block text-primary-600">{process.env.NEXT_PUBLIC_COMPANY_SUBNAME}</span>
+                  <span className="block">'Agasthya'</span>
+                  <span className="block text-primary-600">Traditional Cure</span>
                 </Typography>
                 <Typography variant="p" className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                   Streamline your healthcare operations with our comprehensive management system. 
