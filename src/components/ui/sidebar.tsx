@@ -1,90 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Typography } from './typography';
 import { Button } from './button';
-import { ChevronLeft, ChevronRight, LayoutDashboard, User, Pill, DollarSign, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, ChevronDown } from 'lucide-react';
+import { getMenuByRole } from '@/config/menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarProps {
   userRoles: string[];
   userName: string;
 }
 
-const navigationItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    roles: ["admin", "doctor", "pharmacist", "cash_manager", "stock_manager"],
-  },
-  {
-    label: "Admin",
-    href: "/admin",
-    icon: User,
-    roles: ["admin"],
-    submenu: [
-      { label: "Users", href: "/admin/users" },
-      { label: "Roles", href: "/admin/roles" },
-      { label: "Settings", href: "/admin/settings" },
-    ],
-  },
-  {
-    label: "Doctor",
-    href: "/doctor",
-    icon: User,
-    roles: ["admin", "doctor"],
-    submenu: [
-      { label: "Patients", href: "/doctor/patients" },
-      { label: "Appointments", href: "/doctor/appointments" },
-      { label: "Prescriptions", href: "/doctor/prescriptions" },
-    ],
-  },
-  {
-    label: "Pharmacy",
-    href: "/pharmacy",
-    icon: Pill,
-    roles: ["admin", "doctor", "pharmacist"],
-    submenu: [
-      { label: "Inventory", href: "/pharmacy/inventory" },
-      { label: "Prescriptions", href: "/pharmacy/prescriptions" },
-      { label: "Orders", href: "/pharmacy/orders" },
-    ],
-  },
-  {
-    label: "Cash",
-    href: "/cash",
-    icon: DollarSign,
-    roles: ["admin", "cash_manager"],
-    submenu: [
-      { label: "Transactions", href: "/cash/transactions" },
-      { label: "Reports", href: "/cash/reports" },
-      { label: "Billing", href: "/cash/billing" },
-    ],
-  },
-  {
-    label: "Stock",
-    href: "/stock",
-    icon: Package,
-    roles: ["admin", "doctor", "pharmacist", "stock_manager"],
-    submenu: [
-      { label: "Inventory", href: "/stock/inventory" },
-      { label: "Orders", href: "/stock/orders" },
-      { label: "Suppliers", href: "/stock/suppliers" },
-    ],
-  },
-];
-
 export function Sidebar({ userRoles, userName }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedRole, setExpandedRole] = useState<string | null>(null);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [showUserRoles, setShowUserRoles] = useState(false);
   const pathname = usePathname();
 
+  // Set first role as expanded by default
+  useEffect(() => {
+    if (userRoles.length > 0 && !expandedRole) {
+      setExpandedRole(userRoles[0]);
+    }
+  }, [userRoles, expandedRole]);
+
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const toggleRole = (role: string) => {
+    setExpandedRole(expandedRole === role ? null : role);
   };
 
   const toggleSubmenu = (label: string) => {
@@ -94,10 +49,6 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
   const toggleUserRoles = () => {
     setShowUserRoles(!showUserRoles);
   };
-
-  const accessibleItems = navigationItems.filter(item =>
-    item.roles.some(role => userRoles.includes(role))
-  );
 
   return (
     <div
@@ -111,7 +62,7 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           {!isCollapsed && (
             <Typography variant="h4" className="text-gray-900">
-              ATC
+              Healthy n Happy
             </Typography>
           )}
           <Button
@@ -126,40 +77,92 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-2">
-          {accessibleItems.map((item) => (
-            <div key={item.href}>
-              <button
-                onClick={() => toggleSubmenu(item.label)}
-                className={cn(
-                  "w-full flex items-center p-2 rounded-md hover:bg-gray-100",
-                  pathname.startsWith(item.href) && "bg-gray-100"
-                )}
-              >
-                <item.icon size={20} className="text-green-600" />
-                {!isCollapsed && (
-                  <Typography className="ml-3">{item.label}</Typography>
-                )}
-              </button>
+          <TooltipProvider>
+            {userRoles.map((role) => {
+              const menu = getMenuByRole(role);
+              if (!menu) return null;
 
-              {/* Submenu */}
-              {!isCollapsed && expandedMenu === item.label && item.submenu && (
-                <div className="ml-8 mt-1 space-y-1">
-                  {item.submenu.map((subItem) => (
-                    <Link
-                      key={subItem.href}
-                      href={subItem.href}
-                      className={cn(
-                        "block p-2 rounded-md hover:bg-gray-100",
-                        pathname === subItem.href && "bg-gray-100"
+              return (
+                <div key={role} className="mb-2">
+                  {/* Role Header */}
+                  <button
+                    onClick={() => toggleRole(role)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-2 rounded-md hover:bg-green-100",
+                      expandedRole === role && "bg-yellow-100"
+                    )}
+                  >
+                    <div className="flex items-center">
+                      <menu.icon size={25} className="mr-2" style={{ color: menu.primaryColor }} />
+                      {!isCollapsed && (
+                        <Typography className="font-medium text-lg font-bold" style={{ color: menu.primaryColor }}>{menu.displayName}</Typography>
                       )}
-                    >
-                      <Typography variant="small">{subItem.label}</Typography>
-                    </Link>
-                  ))}
+                    </div>
+                    {!isCollapsed && (
+                      <ChevronDown
+                        size={16}
+                        className={cn(
+                          "transition-transform",
+                          expandedRole === role ? "transform rotate-180" : ""
+                        )}
+                      />
+                    )}
+                  </button>
+
+                  {/* Role Menu Items */}
+                  {expandedRole === role && !isCollapsed && (
+                    <div className="">
+                      {menu.menuItems.map((item) => (
+                        <div key={item.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => toggleSubmenu(item.label)}
+                                className={cn(
+                                  "w-full flex flex-col sm:flex-row items-center p-2 rounded-md hover:bg-gray-100",
+                                  pathname?.startsWith(item.path) && "bg-gray-100"
+                                )}
+                              >
+                                <item.icon size={20} className="text-green-600" />
+                                <Typography className="ml-3">{item.label}</Typography>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{item.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          {/* Submenu */}
+                          {expandedMenu === item.label && item.subItems && (
+                            <div className="ml-8 mt-1 space-y-1">
+                              {item.subItems.map((subItem) => (
+                                <Tooltip key={subItem.id}>
+                                  <TooltipTrigger asChild>
+                                    <Link
+                                      href={subItem.path}
+                                      className={cn(
+                                        "block p-2 rounded-md hover:bg-gray-100",
+                                        pathname === subItem.path && "bg-gray-100"
+                                      )}
+                                    >
+                                      <Typography variant="small">{subItem.label}</Typography>
+                                    </Link>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right">
+                                    <p>{subItem.description}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              );
+            })}
+          </TooltipProvider>
         </nav>
 
         {/* User Info */}
@@ -181,7 +184,6 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                 {userName}
               </Typography>
             )}
-            
           </div>
           
           {/* Roles Dropdown */}
