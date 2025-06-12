@@ -1,17 +1,9 @@
 import { google } from 'googleapis';
 import { sheets_v4 } from 'googleapis';
-import { getServerSession } from 'next-auth';
-import { authOptions } from './auth';
-import { UserRole } from '../types/auth';
+import type { Patient, Consultation, Prescription, InventoryItem, Staff, Transaction, Supplier } from '../types/sheets';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
-const ROLES_SHEET_NAME = process.env.GOOGLE_SHEETS_ROLES_SHEET_NAME;
-
-interface UserRoleData {
-  email: string;
-  roles: UserRole[];
-}
 
 export class GoogleSheetsService {
   private auth: any;
@@ -113,74 +105,121 @@ export class GoogleSheetsService {
     }
   }
 
-  async getUserRoles(email: string): Promise<UserRole[]> {
-    console.log('=== Google Sheets Integration ===');
-    console.log('Environment:', {
-      hasServiceAccountEmail: !!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      hasPrivateKey: !!process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
-      hasSheetsId: !!SPREADSHEET_ID,
-    });
+  // Type-specific methods
+  async getPatients(): Promise<Patient[]> {
+    const rows = await this.getRange('Patients!A2:L');
+    return rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      age: Number(row[2]),
+      gender: row[3] as 'Male' | 'Female' | 'Other',
+      phone: row[4],
+      email: row[5],
+      address: row[6],
+      medicalHistory: row[7],
+      allergies: row[8],
+      emergencyContact: row[9],
+      createdAt: new Date(row[10]),
+      updatedAt: new Date(row[11])
+    }));
+  }
 
-    try {
-      console.log('🔍 Fetching roles for email:', email);
-      console.log('ROLES_SHEET_NAME', ROLES_SHEET_NAME);
-      console.log('SPREADSHEET_ID', SPREADSHEET_ID);
-      
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `${ROLES_SHEET_NAME}!A:B`,
-      });
+  async getConsultations(): Promise<Consultation[]> {
+    const rows = await this.getRange('Consultations!A2:L');
+    return rows.map(row => ({
+      id: row[0],
+      patientId: row[1],
+      doctorId: row[2],
+      date: new Date(row[3]),
+      symptoms: row[4],
+      diagnosis: row[5],
+      pulseReading: row[6],
+      treatment: row[7],
+      followUpDate: row[8] ? new Date(row[8]) : undefined,
+      fees: Number(row[9]),
+      status: row[10] as 'Completed' | 'Pending' | 'Follow-up',
+      createdAt: new Date(row[11])
+    }));
+  }
 
-      console.log('📊 Sheet response:', {
-        hasValues: !!response.data.values,
-        rowCount: response.data.values?.length || 0,
-      });
+  async getPrescriptions(): Promise<Prescription[]> {
+    const rows = await this.getRange('Prescriptions!A2:F');
+    return rows.map(row => ({
+      id: row[0],
+      consultationId: row[1],
+      medicines: JSON.parse(row[2]),
+      totalCost: Number(row[3]),
+      status: row[4] as 'Prescribed' | 'Dispensed' | 'Partial',
+      createdAt: new Date(row[5])
+    }));
+  }
 
-      const rows = response.data.values;
-      if (!rows || rows.length === 0) {
-        console.error('❌ No data found in Google Sheet');
-        return [];
-      }
-      // Find the row matching the email
-      const userRow = rows.slice(1).find((row: any[]) => row[0]?.toLowerCase() === email.toLowerCase());
-      
-      if (!userRow) {
-        console.error('❌ No roles found for email:', email);
-        return [];
-      }
+  async getInventoryItems(): Promise<InventoryItem[]> {
+    const rows = await this.getRange('Inventory!A2:M');
+    return rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      category: row[2] as 'Herb' | 'Oil' | 'Powder' | 'Tablet' | 'Liquid',
+      stock: Number(row[3]),
+      unit: row[4],
+      costPrice: Number(row[5]),
+      sellingPrice: Number(row[6]),
+      supplierId: row[7],
+      expiryDate: new Date(row[8]),
+      reorderLevel: Number(row[9]),
+      batchNumber: row[10],
+      createdAt: new Date(row[11]),
+      updatedAt: new Date(row[12])
+    }));
+  }
 
-      // Get roles from the second column
-      const roles = userRow[1]?.split(',').map((role: string) => role.trim()) || [];
+  async getStaff(): Promise<Staff[]> {
+    const rows = await this.getRange('Staff!A2:J');
+    return rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      role: row[2] as 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'stock_manager',
+      email: row[3],
+      phone: row[4],
+      salary: Number(row[5]),
+      joinDate: new Date(row[6]),
+      status: row[7] as 'Active' | 'Inactive',
+      permissions: JSON.parse(row[8]),
+      createdAt: new Date(row[9])
+    }));
+  }
 
-      // Validate roles
-      const validRoles = roles.filter((role: string): role is UserRole => 
-        VALID_ROLES.includes(role as UserRole)
-      );
+  async getTransactions(): Promise<Transaction[]> {
+    const rows = await this.getRange('Transactions!A2:K');
+    return rows.map(row => ({
+      id: row[0],
+      type: row[1] as 'Income' | 'Expense',
+      category: row[2],
+      amount: Number(row[3]),
+      description: row[4],
+      paymentMethod: row[5] as 'Cash' | 'UPI' | 'Card' | 'Bank Transfer',
+      patientId: row[6] || undefined,
+      staffId: row[7] || undefined,
+      date: new Date(row[8]),
+      createdBy: row[9],
+      createdAt: new Date(row[10])
+    }));
+  }
 
-      console.log('✅ Valid roles:', validRoles);
-
-      if (validRoles.length === 0) {
-        console.error('❌ No valid roles found for email:', email);
-        return [];
-      }
-
-      return validRoles;
-    } catch (error) {
-      console.error('❌ Error fetching roles from Google Sheets:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        });
-      }
-      return [];
-    }
+  async getSuppliers(): Promise<Supplier[]> {
+    const rows = await this.getRange('Suppliers!A2:G');
+    return rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      contact: row[2],
+      phone: row[3],
+      email: row[4],
+      address: row[5],
+      speciality: row[6]
+    }));
   }
 }
 
-const VALID_ROLES: UserRole[] = ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'];
-
 const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
 
-export const getUserRoles = (email: string) => sheetsService.getUserRoles(email);
+export default sheetsService;
