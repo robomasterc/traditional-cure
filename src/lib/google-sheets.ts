@@ -1,9 +1,18 @@
 import { google } from 'googleapis';
 import { sheets_v4 } from 'googleapis';
 import type { Patient, Consultation, Prescription, InventoryItem, Staff, Transaction, Supplier } from '../types/sheets';
+import { UserRole } from '@/types/auth';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
+
+
+const ROLES_SHEET_NAME = process.env.GOOGLE_SHEETS_ROLES_SHEET_NAME;
+
+interface UserRoleData {
+  email: string;
+  roles: UserRole[];
+}
 
 export class GoogleSheetsService {
   private auth: any;
@@ -218,8 +227,77 @@ export class GoogleSheetsService {
       speciality: row[6]
     }));
   }
+
+  async getUserRoles(email: string): Promise<UserRole[]> {
+    console.log('=== Google Sheets Integration ===');
+    console.log('Environment:', {
+      hasServiceAccountEmail: !!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      hasPrivateKey: !!process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+      hasSheetsId: !!SPREADSHEET_ID,
+    });
+
+    try {
+      console.log('🔍 Fetching roles for email:', email);
+      console.log('ROLES_SHEET_NAME', ROLES_SHEET_NAME);
+      console.log('SPREADSHEET_ID', SPREADSHEET_ID);
+      
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${ROLES_SHEET_NAME}!A:B`,
+      });
+
+      console.log('📊 Sheet response:', {
+        hasValues: !!response.data.values,
+        rowCount: response.data.values?.length || 0,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.error('❌ No data found in Google Sheet');
+        return [];
+      }
+      // Find the row matching the email
+      const userRow = rows.slice(1).find((row: any[]) => row[0]?.toLowerCase() === email.toLowerCase());
+      
+      if (!userRow) {
+        console.error('❌ No roles found for email:', email);
+        return [];
+      }
+
+      // Get roles from the second column
+      const roles = userRow[1]?.split(',').map((role: string) => role.trim()) || [];
+
+      // Validate roles
+      const validRoles = roles.filter((role: string): role is UserRole => 
+        VALID_ROLES.includes(role as UserRole)
+      );
+
+      console.log('✅ Valid roles:', validRoles);
+
+      if (validRoles.length === 0) {
+        console.error('❌ No valid roles found for email:', email);
+        return [];
+      }
+
+      return validRoles;
+    } catch (error) {
+      console.error('❌ Error fetching roles from Google Sheets:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      return [];
+    }
+  }
 }
 
+const VALID_ROLES: UserRole[] = ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'];
+
 const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
+
+export const getUserRoles = (email: string) => sheetsService.getUserRoles(email);
 
 export default sheetsService;
