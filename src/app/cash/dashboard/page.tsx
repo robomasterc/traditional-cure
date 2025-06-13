@@ -145,7 +145,7 @@ export default function CashDashboardPage() {
 
           <TabsContent value="transactions" className="mt-6">
             <Typography variant="h4" className="mb-4">Recent Transactions</Typography>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {dashboardData?.recentTransactions.map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
                   <div>

@@ -5,8 +5,11 @@ const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
 
 export async function GET() {
   try {
-    // Fetch transactions for the dashboard
-    const transactions = await sheetsService.getTransactions();
+    // Fetch transactions and patients for the dashboard
+    const [transactions, patients] = await Promise.all([
+      sheetsService.getTransactions(),
+      sheetsService.getPatients()
+    ]);
     
     // Calculate summary data
     const today = new Date();
@@ -49,7 +52,7 @@ export async function GET() {
         todayRevenue,
         monthlyRevenue,
         pendingPayments,
-        totalPatients: 1250, // This should come from patients data
+        totalPatients: patients.length,
       },
       recentTransactions,
       paymentMethods,
