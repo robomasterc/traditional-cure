@@ -79,7 +79,7 @@ export interface Transaction {
   category: string;
   amount: number;
   description: string;
-  paymentMethod: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer';
+  paymentMethod: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Pending';
   patientId?: string;
   staffId?: string;
   date: Date;

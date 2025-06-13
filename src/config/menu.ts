@@ -673,39 +673,11 @@ export const roleBasedMenus: RoleMenu[] = [
         description: "Today's financial summary and transactions",
         subItems: [
           {
-            id: "dashboard",
-            label: "Financial Dashboard",
+            id: "summary",
+            label: "Financial summary",
             icon: DollarSign,
             path: "/cash/dashboard",
-            description: "Today's financial summary and transactions"
-          },
-          {
-            id: "daily-summary",
-            label: "Daily Summary",
-            icon: Calendar,
-            path: "/cash/reports/daily",
-            description: "Daily cash and sales summary"
-          },
-          {
-            id: "weekly-report",
-            label: "Weekly Report",
-            icon: CalendarDays,
-            path: "/cash/reports/weekly",
-            description: "Weekly financial summary"
-          },
-          {
-            id: "monthly-report",
-            label: "Monthly Report",
-            icon: CalendarRange,
-            path: "/cash/reports/monthly",
-            description: "Monthly financial analysis"
-          },
-          {
-            id: "payment-analysis",
-            label: "Payment Analysis",
-            icon: PieChart,
-            path: "/cash/reports/analysis",
-            description: "Payment method breakdown"
+            description: "Financial Summary and Reports"
           }
         ]
       },
