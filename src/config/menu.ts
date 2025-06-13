@@ -670,7 +670,44 @@ export const roleBasedMenus: RoleMenu[] = [
         label: "Financial Dashboard",
         icon: DollarSign,
         path: "/cash/dashboard",
-        description: "Today's financial summary and transactions"
+        description: "Today's financial summary and transactions",
+        subItems: [
+          {
+            id: "dashboard",
+            label: "Financial Dashboard",
+            icon: DollarSign,
+            path: "/cash/dashboard",
+            description: "Today's financial summary and transactions"
+          },
+          {
+            id: "daily-summary",
+            label: "Daily Summary",
+            icon: Calendar,
+            path: "/cash/reports/daily",
+            description: "Daily cash and sales summary"
+          },
+          {
+            id: "weekly-report",
+            label: "Weekly Report",
+            icon: CalendarDays,
+            path: "/cash/reports/weekly",
+            description: "Weekly financial summary"
+          },
+          {
+            id: "monthly-report",
+            label: "Monthly Report",
+            icon: CalendarRange,
+            path: "/cash/reports/monthly",
+            description: "Monthly financial analysis"
+          },
+          {
+            id: "payment-analysis",
+            label: "Payment Analysis",
+            icon: PieChart,
+            path: "/cash/reports/analysis",
+            description: "Payment method breakdown"
+          }
+        ]
       },
       {
         id: "billing",
@@ -773,43 +810,6 @@ export const roleBasedMenus: RoleMenu[] = [
             icon: Calculator,
             path: "/cash/payments/reconciliation",
             description: "Daily payment reconciliation"
-          }
-        ]
-      },
-      {
-        id: "reports",
-        label: "Financial Reports",
-        icon: FileText,
-        path: "/cash/reports",
-        description: "Generate financial reports",
-        subItems: [
-          {
-            id: "daily-summary",
-            label: "Daily Summary",
-            icon: Calendar,
-            path: "/cash/reports/daily",
-            description: "Daily cash and sales summary"
-          },
-          {
-            id: "weekly-report",
-            label: "Weekly Report",
-            icon: CalendarDays,
-            path: "/cash/reports/weekly",
-            description: "Weekly financial summary"
-          },
-          {
-            id: "monthly-report",
-            label: "Monthly Report",
-            icon: CalendarRange,
-            path: "/cash/reports/monthly",
-            description: "Monthly financial analysis"
-          },
-          {
-            id: "payment-analysis",
-            label: "Payment Analysis",
-            icon: PieChart,
-            path: "/cash/reports/analysis",
-            description: "Payment method breakdown"
           }
         ]
       },
