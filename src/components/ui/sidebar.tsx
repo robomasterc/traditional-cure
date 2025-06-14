@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Typography } from './typography';
 import { Button } from './button';
@@ -26,6 +26,7 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [showUserRoles, setShowUserRoles] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Set first role as expanded by default
   useEffect(() => {
@@ -117,7 +118,13 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => toggleSubmenu(item.label)}
+                                onClick={() => {
+                                  if (item.subItems) {
+                                    toggleSubmenu(item.label);
+                                  } else {
+                                    router.push(item.path);
+                                  }
+                                }}
                                 className={cn(
                                   "w-full flex flex-col sm:flex-row items-center p-2 rounded-md hover:bg-gray-100",
                                   pathname?.startsWith(item.path) && "bg-gray-100"

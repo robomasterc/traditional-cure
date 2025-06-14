@@ -37,7 +37,7 @@ export async function GET() {
     // Get recent transactions (last 5)
     const recentTransactions = transactions
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 15);
+      .slice(0, 5);
 
     // Calculate payment method distribution
     const paymentMethods = transactions

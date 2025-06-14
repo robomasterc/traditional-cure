@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { GoogleSheetsService } from '@/lib/google-sheets';
+import { Transaction } from '@/types/sheets';
 
 const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
+
+interface ReportDataPoint {
+  income: number;
+  expense: number;
+  transactions: Transaction[];
+}
 
 export async function GET(request: Request) {
   try {
@@ -22,13 +29,12 @@ export async function GET(request: Request) {
     const end = new Date(endDate);
 
     // Filter transactions within date range
-    const filteredTransactions = transactions.filter(t => {
+    const filteredTransactions = transactions.filter(t => {      
       const date = new Date(t.date);
       return date >= start && date <= end;
     });
 
-    let reportData;
-
+    let reportData;        
     switch (reportType) {
       case 'daily':
         reportData = generateDailyReport(filteredTransactions);
@@ -59,7 +65,7 @@ export async function GET(request: Request) {
   }
 }
 
-function generateDailyReport(transactions: any[]) {
+function generateDailyReport(transactions: Transaction[]) {
   const dailyData = transactions.reduce((acc, t) => {
     const date = new Date(t.date).toISOString().split('T')[0];
     if (!acc[date]) {
@@ -76,18 +82,17 @@ function generateDailyReport(transactions: any[]) {
     }
     acc[date].transactions.push(t);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, ReportDataPoint>);
 
   return Object.entries(dailyData).map(([date, data]) => ({
     date,
     income: data.income,
     expense: data.expense,
-    net: data.income - data.expense,
-    transactions: data.transactions
+    net: data.income - data.expense
   }));
 }
 
-function generateWeeklyReport(transactions: any[]) {
+function generateWeeklyReport(transactions: Transaction[]) {
   const weeklyData = transactions.reduce((acc, t) => {
     const date = new Date(t.date);
     const weekStart = new Date(date);
@@ -108,18 +113,17 @@ function generateWeeklyReport(transactions: any[]) {
     }
     acc[weekKey].transactions.push(t);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, ReportDataPoint>);
 
   return Object.entries(weeklyData).map(([weekStart, data]) => ({
     weekStart,
     income: data.income,
     expense: data.expense,
-    net: data.income - data.expense,
-    transactions: data.transactions
+    net: data.income - data.expense
   }));
 }
 
-function generateMonthlyReport(transactions: any[]) {
+function generateMonthlyReport(transactions: Transaction[]) {
   const monthlyData = transactions.reduce((acc, t) => {
     const date = new Date(t.date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -138,39 +142,21 @@ function generateMonthlyReport(transactions: any[]) {
     }
     acc[monthKey].transactions.push(t);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, ReportDataPoint>);
 
   return Object.entries(monthlyData).map(([month, data]) => ({
     month,
     income: data.income,
     expense: data.expense,
-    net: data.income - data.expense,
-    transactions: data.transactions
+    net: data.income - data.expense
   }));
 }
 
-function generatePaymentAnalysis(transactions: any[]) {
-  const analysis = {
-    paymentMethods: transactions
-      .filter(t => t.type === 'Income')
-      .reduce((acc, t) => {
-        acc[t.paymentMethod] = (acc[t.paymentMethod] || 0) + t.amount;
-        return acc;
-      }, {} as Record<string, number>),
-    
-    categories: transactions.reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>),
-    
-    dailyTrend: transactions
-      .filter(t => t.type === 'Income')
-      .reduce((acc, t) => {
-        const date = new Date(t.date).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + t.amount;
-        return acc;
-      }, {} as Record<string, number>)
-  };
+function generatePaymentAnalysis(transactions: Transaction[]) {
+  const categories = transactions.reduce((acc, t) => {
+    acc[t.category] = (acc[t.category] || 0) + t.amount;
+    return acc;
+  }, {} as Record<string, number>);
 
-  return analysis;
+  return { categories };
 } 

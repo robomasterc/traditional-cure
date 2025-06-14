@@ -671,15 +671,15 @@ export const roleBasedMenus: RoleMenu[] = [
         icon: DollarSign,
         path: "/cash/dashboard",
         description: "Today's financial summary and transactions",
-        subItems: [
-          {
-            id: "summary",
-            label: "Financial summary",
-            icon: DollarSign,
-            path: "/cash/dashboard",
-            description: "Financial Summary and Reports"
-          }
-        ]
+        // subItems: [
+        //   {
+        //     id: "summary",
+        //     label: "Financial summary",
+        //     icon: DollarSign,
+        //     path: "/cash/dashboard",
+        //     description: "Financial Summary and Reports"
+        //   }
+        // ]
       },
       {
         id: "billing",
