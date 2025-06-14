@@ -8,6 +8,7 @@ import { FinancialReports } from '@/components/reports/financial-reports';
 
 export default function CashReportsPage() {
   const { data: session } = useSession();
+  console.log("session===========================",session);
 
   return (
     <div className="space-y-6">

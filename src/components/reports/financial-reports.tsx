@@ -40,6 +40,10 @@ interface ApiReportData {
   categories?: Record<string, number>;
 }
 
+interface AnalysisResponse {
+  categories: Record<string, number>;
+}
+
 export function FinancialReports() {
   const [startDate, setStartDate] = React.useState<Date | null>(null);
   const [endDate, setEndDate] = React.useState<Date | null>(null);
@@ -47,7 +51,7 @@ export function FinancialReports() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState('daily');
-
+  
   const fetchReportData = React.useCallback(async () => {
     if (!startDate || !endDate) return;
 
@@ -55,9 +59,9 @@ export function FinancialReports() {
       setLoading(true);
       const response = await fetch(`/api/cash/reports?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&type=${activeTab}`);
       if (!response.ok) throw new Error('Failed to fetch report data');
-      
-      const data = await response.json() as ApiReportData[];
-      
+
+      const data = await response.json();
+      const typedData = activeTab === 'analysis' ? data as AnalysisResponse : data as ApiReportData[];
       setReportData(prev => {
         if (!prev) return {
           daily: [], weekly: [], monthly: [], analysis: []
@@ -66,28 +70,29 @@ export function FinancialReports() {
         const newData = { ...prev };
         switch (activeTab) {
           case 'daily':
-            newData.daily = data.map(item => ({
+            newData.daily = (typedData as ApiReportData[]).map(item => ({
               date: item.date!,
               income: item.income,
               expenses: item.expense
             }));
             break;
           case 'weekly':
-            newData.weekly = data.map(item => ({
+            newData.weekly = (typedData as ApiReportData[]).map(item => ({
               week: item.weekStart!,
               income: item.income,
               expenses: item.expense
             }));
             break;
           case 'monthly':
-            newData.monthly = data.map(item => ({
+            newData.monthly = (typedData as ApiReportData[]).map(item => ({
               month: item.month!,
               income: item.income,
               expenses: item.expense
             }));
             break;
           case 'analysis':
-            newData.analysis = Object.entries(data[0]?.categories || {}).map(([category, amount]) => ({
+            const analysisData = typedData as AnalysisResponse;
+            newData.analysis = Object.entries(analysisData.categories || {}).map(([category, amount]) => ({
               category,
               amount: amount as number
             }));
