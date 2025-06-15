@@ -17,7 +17,7 @@ interface DashboardData {
     totalPatients: number;
   };
   recentTransactions: Transaction[];
-  paymentMethods: Record<string, number>;
+  paymentMethods: Record<string, { income: number; expenses: number }>;
 }
 
 export default function CashDashboardPage() {
@@ -33,11 +33,12 @@ export default function CashDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/cash/dashboard');
+      const response = await fetch('/api/cash/dashboard');      
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
       const data = await response.json() as DashboardData;
+      console.log("data===========================",data);
       setDashboardData(data);
       setError(null);
     } catch (err) {
@@ -144,21 +145,18 @@ export default function CashDashboardPage() {
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {dashboardData?.recentTransactions.map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                  <div>
+                  <div className="flex items-center justify-between w-full">
                     <Typography variant="small" className="font-medium">
-                      {transaction.description}
+                      {new Date(transaction.date).toLocaleDateString()} | {transaction.description}
                     </Typography>
-                    <Typography variant="small" color="muted">
-                      {new Date(transaction.date).toLocaleDateString()}
+                    <Typography
+                      variant="small"
+                      className={transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'}
+                    >
+                      {transaction.type === 'Income' ? '+' : '-'}
+                      {formatCurrency(transaction.cash + transaction.upi)}
                     </Typography>
                   </div>
-                  <Typography
-                    variant="small"
-                    className={transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'}
-                  >
-                    {transaction.type === 'Income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
-                  </Typography>
                 </div>
               ))}
             </div>
@@ -167,14 +165,34 @@ export default function CashDashboardPage() {
           <TabsContent value="payments" className="mt-6">
             <Typography variant="h4" className="mb-4">Payment Methods</Typography>
             <div className="space-y-4">
-              {Object.entries(dashboardData?.paymentMethods || {}).map(([method, amount]) => (
-                <div key={method} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                  <Typography variant="small" className="font-medium">
+              {Object.entries(dashboardData?.paymentMethods || {}).map(([method, data]) => (
+                <div key={method} className="p-4 bg-white rounded-lg border">
+                  <Typography variant="small" className="font-medium mb-2">
                     {method}
                   </Typography>
-                  <Typography variant="small" className="text-green-600">
-                    {formatCurrency(amount)}
-                  </Typography>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Typography variant="small" color="muted">Income</Typography>
+                      <Typography variant="small" className="text-green-600">
+                        {formatCurrency(data.income)}
+                      </Typography>
+                    </div>
+                    <div>
+                      <Typography variant="small" color="muted">Expenses</Typography>
+                      <Typography variant="small" className="text-red-600">
+                        {formatCurrency(data.expenses)}
+                      </Typography>
+                    </div>
+                    <div>
+                      <Typography variant="small" color="muted">Net</Typography>
+                      <Typography 
+                        variant="small" 
+                        className={data.income - data.expenses >= 0 ? 'text-green-600' : 'text-red-600'}
+                      >
+                        {formatCurrency(data.income - data.expenses)}
+                      </Typography>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

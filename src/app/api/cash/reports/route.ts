@@ -76,9 +76,9 @@ function generateDailyReport(transactions: Transaction[]) {
       };
     }
     if (t.type === 'Income') {
-      acc[date].income += t.amount;
+      acc[date].income += t.cash + t.upi;
     } else {
-      acc[date].expense += t.amount;
+      acc[date].expense += t.cash + t.upi;
     }
     acc[date].transactions.push(t);
     return acc;
@@ -107,9 +107,9 @@ function generateWeeklyReport(transactions: Transaction[]) {
       };
     }
     if (t.type === 'Income') {
-      acc[weekKey].income += t.amount;
+      acc[weekKey].income += t.cash + t.upi;
     } else {
-      acc[weekKey].expense += t.amount;
+      acc[weekKey].expense += t.cash + t.upi;
     }
     acc[weekKey].transactions.push(t);
     return acc;
@@ -136,9 +136,9 @@ function generateMonthlyReport(transactions: Transaction[]) {
       };
     }
     if (t.type === 'Income') {
-      acc[monthKey].income += t.amount;
+      acc[monthKey].income += t.cash + t.upi;
     } else {
-      acc[monthKey].expense += t.amount;
+      acc[monthKey].expense += t.cash + t.upi;
     }
     acc[monthKey].transactions.push(t);
     return acc;
@@ -153,8 +153,8 @@ function generateMonthlyReport(transactions: Transaction[]) {
 }
 
 function generatePaymentAnalysis(transactions: Transaction[]) {
-  const categories = transactions.reduce((acc, t) => {
-    acc[t.category] = (acc[t.category] || 0) + t.amount;
+  const categories = transactions.filter(t => t.type === 'Expense').reduce((acc, t) => {
+    acc[t.category] = (acc[t.category] || 0) + t.cash + t.upi;
     return acc;
   }, {} as Record<string, number>);
 

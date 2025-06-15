@@ -77,9 +77,9 @@ export interface Transaction {
   id: string;
   type: 'Income' | 'Expense';
   category: string;
-  amount: number;
+  cash: number;
+  upi: number;
   description: string;
-  paymentMethod: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Pending';
   patientId?: string;
   staffId?: string;
   date: Date;

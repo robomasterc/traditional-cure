@@ -158,20 +158,21 @@ const generateTransactions = (patients: Patient[], staff: Staff[], count: number
   const transactions: Transaction[] = [];
   const types = ['Income', 'Expense'] as const;
   const categories = ['Consultation', 'Medicine', 'Salary', 'Utilities', 'Rent'] as const;
-  const paymentMethods = ['Cash', 'UPI', 'Card', 'Bank Transfer'] as const;
 
   for (let i = 0; i < count; i++) {
     const createdAt = randomDate(new Date('2023-01-01'), new Date());
     const type = types[i % types.length];
-    const amount = type === 'Income' ? Math.floor(Math.random() * 5000) + 1000 : Math.floor(Math.random() * 3000) + 500;
+    const totalAmount = type === 'Income' ? Math.floor(Math.random() * 5000) + 1000 : Math.floor(Math.random() * 3000) + 500;
+    const cashAmount = Math.floor(totalAmount * 0.7); // 70% cash
+    const upiAmount = totalAmount - cashAmount; // 30% UPI
 
     transactions.push({
       id: generateId('TRX'),
       type,
       category: categories[i % categories.length],
-      amount,
+      cash: cashAmount,
+      upi: upiAmount,
       description: `${type} for ${categories[i % categories.length]}`,
-      paymentMethod: paymentMethods[i % paymentMethods.length],
       patientId: type === 'Income' ? patients[i % patients.length].id : undefined,
       staffId: type === 'Expense' ? staff[i % staff.length].id : undefined,
       date: createdAt,

@@ -7,9 +7,9 @@ const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
 interface TransactionInput {
   type: 'Income' | 'Expense';
   category: string;
-  amount: number;
+  cash: number;
+  upi: number;
   description: string;
-  paymentMethod: 'Cash' | 'UPI' | 'Card' | 'Bank Transfer';
   patientId?: string;
   staffId?: string;
   date: string;
@@ -64,16 +64,16 @@ export async function POST(request: Request) {
     const {
       type,
       category,
-      amount,
+      cash,
+      upi,
       description,
-      paymentMethod,
       patientId,
       staffId,
       date
     } = body;
 
     // Validate required fields
-    if (!type || !category || !amount || !description || !paymentMethod || !date) {
+    if (!type || !category || !description || !date) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -85,9 +85,9 @@ export async function POST(request: Request) {
       id: Date.now().toString(), // Generate a unique ID
       type,
       category,
-      amount: Number(amount),
+      cash: Number(cash) || 0,
+      upi: Number(upi) || 0,
       description,
-      paymentMethod,
       patientId: patientId || '',
       staffId: staffId || '',
       date: new Date(date),
@@ -100,9 +100,9 @@ export async function POST(request: Request) {
       newTransaction.id,
       newTransaction.type,
       newTransaction.category,
-      newTransaction.amount,
+      newTransaction.cash,
+      newTransaction.upi,
       newTransaction.description,
-      newTransaction.paymentMethod,
       newTransaction.patientId,
       newTransaction.staffId,
       newTransaction.date.toISOString(),

@@ -20,7 +20,7 @@ export async function GET() {
         t.type === 'Income' && 
         new Date(t.date).getDate() === today.getDate()
       )
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.cash + t.upi, 0);
 
     const monthlyRevenue = transactions
       .filter(t => 
@@ -28,11 +28,11 @@ export async function GET() {
         new Date(t.date).getMonth() === today.getMonth() &&
         new Date(t.date).getFullYear() === today.getFullYear()
       )
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.cash + t.upi, 0);
 
     const pendingPayments = transactions
-      .filter(t => t.type === 'Income' && t.paymentMethod === 'Pending')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.type === 'Income')
+      .reduce((sum, t) => sum + t.cash + t.upi, 0);
 
     // Get recent transactions (last 5)
     const recentTransactions = transactions
@@ -41,11 +41,19 @@ export async function GET() {
 
     // Calculate payment method distribution
     const paymentMethods = transactions
-      .filter(t => t.type === 'Income')
-      .reduce((acc, t) => {
-        acc[t.paymentMethod] = (acc[t.paymentMethod] || 0) + t.amount;
+      .reduce((acc, t) => {        
+        if (t.type === 'Income') {
+          acc['Cash'].income += t.cash;
+          acc['UPI'].income += t.upi;
+        } else {
+          acc['Cash'].expenses += t.cash;
+          acc['UPI'].expenses += t.upi;
+        }
         return acc;
-      }, {} as Record<string, number>);
+      }, { 
+        'Cash': { income: 0, expenses: 0 },
+        'UPI': { income: 0, expenses: 0 }
+      });
 
     return NextResponse.json({
       summary: {
