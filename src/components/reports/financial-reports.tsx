@@ -293,7 +293,7 @@ export function FinancialReports() {
                     <Typography variant="small" className="font-medium">
                       {item.category}
                     </Typography>
-                    <Typography variant="small" className="text-green-600">
+                    <Typography variant="small" className="text-red-600">
                       {formatCurrency(item.amount)}
                     </Typography>
                   </div>

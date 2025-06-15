@@ -199,10 +199,10 @@ export class GoogleSheetsService {
   }
 
   async getTransactions(): Promise<Transaction[]> {
-    const rows = await this.getRange('Transactions!A2:K');
+    const rows = (await this.getRange('Transactions!A2:K'))
     return rows.map(row => ({
       id: row[0],
-      type: row[1] as 'Income' | 'Expense',
+      type: row[1] as 'Income' | 'Expense', 
       category: row[2],
       cash: Number(row[3]),
       upi: Number(row[4]),
@@ -212,7 +212,7 @@ export class GoogleSheetsService {
       date: new Date(row[8]),
       createdBy: row[9],
       createdAt: new Date(row[10])
-    }));
+    })).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getSuppliers(): Promise<Supplier[]> {
