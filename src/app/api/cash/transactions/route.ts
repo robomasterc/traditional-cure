@@ -1,88 +1,188 @@
-import { NextResponse } from 'next/server';
-import { GoogleSheetsService } from '@/lib/google-sheets';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import sheetsService from '@/lib/google-sheets';
 
-const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
+// Validation schemas
+const transactionSchema = z.object({
+  type: z.enum(['Income', 'Expense']),
+  category: z.string(),
+  cash: z.string().transform(val => Number(val)),
+  upi: z.string().transform(val => Number(val)),
+  description: z.string(),
+  patientId: z.string().optional(),
+  staffId: z.string(),
+  date: z.string(),
+  createdBy: z.string(),
+  createdAt: z.string()
+});
 
-interface TransactionRequest {
-  type: 'Income' | 'Expense';
-  category: string;
-  amount: number;
-  description: string;
-  date: string;
-  paymentMethod: 'cash' | 'upi';
-  createdBy: string;
-}
+type Transaction = z.infer<typeof transactionSchema>;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const type = searchParams.get('type');
+    const category = searchParams.get('category');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
     const transactions = await sheetsService.getTransactions();
-    return NextResponse.json(transactions);
+
+    let filteredTransactions = transactions;
+
+    if (type) {
+      filteredTransactions = filteredTransactions.filter(t => t.type === type);
+    }
+
+    if (category) {
+      filteredTransactions = filteredTransactions.filter(t => t.category === category);
+    }
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      filteredTransactions = filteredTransactions.filter(t => {
+        const transactionDate = t.date;
+        return transactionDate >= start && transactionDate <= end;
+      });
+    }
+
+    return NextResponse.json(filteredTransactions);
   } catch (error) {
-    console.error('Error fetching transactions:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('Error in GET /api/cash/transactions:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json() as TransactionRequest;
-    const {
-      type,
-      category,
-      amount,
-      description,
-      date,
-      paymentMethod,
-      createdBy
-    } = body;
+    const body = await request.json();
+    const validatedData = transactionSchema.parse(body);
 
-    // Validate required fields
-    if (!type || !category || !amount || !description || !date || !paymentMethod) {
-      return new NextResponse('Missing required fields', { status: 400 });
-    }
+    const values = [
+      new Date().toISOString().replace(/[-:]/g, '').slice(0, 15),
+      validatedData.type,
+      validatedData.category,
+      validatedData.cash.toString(),
+      validatedData.upi.toString(),
+      validatedData.description,
+      validatedData.patientId || '',
+      validatedData.staffId,
+      validatedData.date,
+      validatedData.createdBy,
+      validatedData.createdAt
+    ];
 
-    // Prepare transaction data
-    const transaction = {
-      id: Date.now().toString(),
-      type,
-      category,
-      cash: paymentMethod === 'cash' ? amount : 0,
-      upi: paymentMethod === 'upi' ? amount : 0,
-      description,
-      date: new Date(date).toISOString(),
-      createdBy
-    };
-
-    // Append to Google Sheets
-    await sheetsService.appendRow('Transactions!A:K', [
-      transaction.id,
-      transaction.type,
-      transaction.category,
-      transaction.cash,
-      transaction.upi,
-      transaction.description,
-      '', // patientId (optional)
-      '', // staffId (optional)
-      transaction.date,
-      transaction.createdBy,
-      new Date().toISOString() // createdAt
-    ]);
-
-    return NextResponse.json(transaction);
+    await sheetsService.appendRow('Transactions!A:J', values);
+    return NextResponse.json(validatedData, { status: 201 });
   } catch (error) {
-    console.error('Error creating transaction:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    console.error('Error in POST /api/cash/transactions:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validatedData = transactionSchema.parse(body);
+
+    const transactions = await sheetsService.getTransactions();
+    const rowIndex = transactions.findIndex(t => 
+      t.type === validatedData.type && 
+      t.category === validatedData.category && 
+      t.cash === validatedData.cash && 
+      t.upi === validatedData.upi && 
+      t.description === validatedData.description && 
+      t.patientId === validatedData.patientId && 
+      t.staffId === validatedData.staffId && 
+      t.date.getTime() === new Date(validatedData.date).getTime() && 
+      t.createdBy === validatedData.createdBy && 
+      t.createdAt.getTime() === new Date(validatedData.createdAt).getTime()
+    );
+
+    if (rowIndex === -1) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+
+    const values = [
+      validatedData.type,
+      validatedData.category,
+      validatedData.cash.toString(),
+      validatedData.upi.toString(),
+      validatedData.description,
+      validatedData.patientId || '',
+      validatedData.staffId,
+      validatedData.date,
+      validatedData.createdBy,
+      validatedData.createdAt
+    ];
+
+    await sheetsService.updateRow(`Transactions!A${rowIndex + 2}:J${rowIndex + 2}`, values);
+    return NextResponse.json(validatedData);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    console.error('Error in PUT /api/cash/transactions:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const type = searchParams.get('type');
+    const category = searchParams.get('category');
+    const date = searchParams.get('date');
+    const staffId = searchParams.get('staffId');
+
+    if (!type || !category || !date || !staffId) {
+      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+    }
+
+    const transactions = await sheetsService.getTransactions();
+    const rowIndex = transactions.findIndex(t => 
+      t.type === type && 
+      t.category === category && 
+      t.date.getTime() === new Date(date).getTime() && 
+      t.staffId === staffId
+    );
+
+    if (rowIndex === -1) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+
+    // Clear the row by updating it with empty values
+    const emptyValues = Array(10).fill('');
+    await sheetsService.updateRow(`Transactions!A${rowIndex + 2}:J${rowIndex + 2}`, emptyValues);
+    return NextResponse.json({ message: 'Transaction deleted successfully' });
+  } catch (error) {
+    console.error('Error in DELETE /api/cash/transactions:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

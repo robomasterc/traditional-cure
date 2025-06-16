@@ -667,7 +667,7 @@ export const roleBasedMenus: RoleMenu[] = [
     menuItems: [
       {
         id: "dashboard",
-        label: "Financial Dashboard",
+        label: "Financials",
         icon: DollarSign,
         path: "/cash/dashboard",
         description: "Today's financial summary and transactions",
@@ -720,33 +720,33 @@ export const roleBasedMenus: RoleMenu[] = [
       },
       {
         id: "transactions",
-        label: "Daily Transactions",
+        label: "Transactions",
         icon: ArrowUpDown,
         path: "/cash/transactions",
         description: "Record and manage all transactions",
-        subItems: [
-          {
-            id: "income-entry",
-            label: "Income Entry",
-            icon: TrendingUp,
-            path: "/cash/transactions/income",
-            description: "Record income transactions"
-          },
-          {
-            id: "expense-entry",
-            label: "Expense Entry",
-            icon: TrendingDown,
-            path: "/cash/transactions/expense",
-            description: "Record expense transactions"
-          },
-          {
-            id: "transaction-history",
-            label: "Transaction History",
-            icon: History,
-            path: "/cash/transactions/history",
-            description: "View all transaction records"
-          }
-        ]
+        // subItems: [
+        //   {
+        //     id: "income-entry",
+        //     label: "Income Entry",
+        //     icon: TrendingUp,
+        //     path: "/cash/transactions/income",
+        //     description: "Record income transactions"
+        //   },
+        //   {
+        //     id: "expense-entry",
+        //     label: "Expense Entry",
+        //     icon: TrendingDown,
+        //     path: "/cash/transactions/expense",
+        //     description: "Record expense transactions"
+        //   },
+        //   {
+        //     id: "transaction-history",
+        //     label: "Transaction History",
+        //     icon: History,
+        //     path: "/cash/transactions/history",
+        //     description: "View all transaction records"
+        //   }
+        // ]
       },
       {
         id: "payments",

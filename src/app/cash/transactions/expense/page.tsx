@@ -102,6 +102,7 @@ export default function ExpenseEntryPage() {
                 <option value="Utilities">Utilities</option>
                 <option value="Maintenance">Maintenance</option>
                 <option value="Equipment">Equipment</option>
+                <option value="Refund">Refund</option>
                 <option value="Other">Other</option>
               </select>
             </div>

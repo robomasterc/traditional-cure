@@ -212,7 +212,7 @@ export class GoogleSheetsService {
       date: new Date(row[8]),
       createdBy: row[9],
       createdAt: new Date(row[10])
-    })).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   async getSuppliers(): Promise<Supplier[]> {
