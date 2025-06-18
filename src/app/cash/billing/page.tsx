@@ -87,6 +87,8 @@ export default function BillingPage() {
   const [loadingInvoices, setLoadingInvoices] = React.useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = React.useState(false);
   const [editingInvoice, setEditingInvoice] = React.useState<{ id: string; items: any[] } | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = React.useState<string>('');
+  const [selectedDoctorId, setSelectedDoctorId] = React.useState<string>('');
   const [formData, setFormData] = React.useState<BillingForm>({
     patientId: '',
     amount: 0,
@@ -167,21 +169,30 @@ export default function BillingPage() {
     }
   };
 
-  const handleEditInvoice = (invoice: InvoiceItem) => {
-    const invoiceItem = {
+  const handleEditInvoice = (invoice: any) => {
+    console.log("Editing invoice:", invoice);
+    
+    // Extract patient and doctor IDs from the invoice
+    setSelectedPatientId(invoice.patientId);
+    setSelectedDoctorId(invoice.doctorId);
+    
+    // Convert the items array to the format expected by InvoiceDialog
+    const editItems = invoice.items.map((item: any) => ({
       patientId: invoice.patientId,
       doctorId: invoice.doctorId,
-      type: invoice.type as 'Consultation' | 'Medicine' | 'Procedure' | 'Discount',
-      category: invoice.category,
-      description: invoice.description,
-      quantity: invoice.quantity,
-      amount: invoice.amount,
-      total: invoice.total
-    };
+      type: item.type as 'Consultation' | 'Medicine' | 'Procedure' | 'Discount',
+      category: item.category,
+      description: item.description,
+      quantity: item.quantity,
+      amount: item.amount,
+      total: item.total
+    }));
+    
+    console.log("Edit items:", editItems);
     
     setEditingInvoice({
       id: invoice.id,
-      items: [invoiceItem]
+      items: editItems
     });
     setShowInvoiceDialog(true);
   };
@@ -285,7 +296,11 @@ export default function BillingPage() {
               Refresh
             </Button>
             <Button
-              onClick={() => setShowInvoiceDialog(true)}
+              onClick={() => {
+                setSelectedPatientId('');
+                setSelectedDoctorId('');
+                setShowInvoiceDialog(true);
+              }}
               className="bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -312,17 +327,14 @@ export default function BillingPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm text-gray-700">
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-2">ID</th>
                   <th className="text-left p-2">Patient ID</th>
                   <th className="text-left p-2">Doctor ID</th>
-                  <th className="text-left p-2">Type</th>
                   <th className="text-left p-2">Category</th>
                   <th className="text-left p-2">Description</th>
-                  <th className="text-left p-2">Qty</th>
-                  <th className="text-left p-2">Amount</th>
                   <th className="text-left p-2">Total</th>
                   <th className="text-left p-2">Status</th>
                   <th className="text-left p-2">Actions</th>
@@ -334,11 +346,8 @@ export default function BillingPage() {
                     <td className="p-2">{invoice.id}</td>
                     <td className="p-2">{invoice.patientId}</td>
                     <td className="p-2">{invoice.doctorId}</td>
-                    <td className="p-2">{invoice.type}</td>
                     <td className="p-2">{invoice.category}</td>
                     <td className="p-2">{invoice.description}</td>
-                    <td className="p-2">{invoice.quantity}</td>
-                    <td className="p-2">₹{invoice.amount}</td>
                     <td className="p-2 font-medium">₹{invoice.total}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 rounded-full text-xs ${
@@ -419,10 +428,14 @@ export default function BillingPage() {
         onClose={() => {
           setShowInvoiceDialog(false);
           setEditingInvoice(null);
+          setSelectedPatientId('');
+          setSelectedDoctorId('');
         }}
         onSuccess={handleInvoiceSuccess}
         editData={editingInvoice?.items}
         editId={editingInvoice?.id}
+        selectedPatientId={selectedPatientId}
+        selectedDoctorId={selectedDoctorId}
       />
     </div>
   );

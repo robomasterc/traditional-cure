@@ -17,7 +17,6 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   amount: number;
-  discount: number;
   total: number;
 }
 
@@ -27,9 +26,11 @@ interface InvoiceDialogProps {
   onSuccess: () => void;
   editData?: InvoiceItem[];
   editId?: string;
+  selectedPatientId?: string;
+  selectedDoctorId?: string;
 }
 
-export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, editId }: InvoiceDialogProps) {
+export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, editId, selectedPatientId, selectedDoctorId }: InvoiceDialogProps) {
   const [items, setItems] = React.useState<InvoiceItem[]>([
     {
       patientId: '',
@@ -39,7 +40,6 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       description: '',
       quantity: 1,
       amount: 0,
-      discount: 0,
       total: 0
     }
   ]);
@@ -52,31 +52,29 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     } else {
       // Reset form for new consultation
       setItems([{
-        patientId: '',
-        doctorId: '',
-        type: 'Consultation',
+        patientId: selectedPatientId || '',
+        doctorId: selectedDoctorId || '',
+        type: !editId ? 'Consultation' : 'Medicine',
         category: '',
         description: '',
         quantity: 1,
         amount: 0,
-        discount: 0,
         total: 0
       }]);
     }
     // Clear any previous errors when opening dialog
     setError(null);
-  }, [editData, isOpen]);
+  }, [editData, isOpen, selectedPatientId, selectedDoctorId]);
 
   const addRow = () => {
     setItems([...items, {
-      patientId: '',
-      doctorId: '',
-      type: 'Consultation',
+      patientId: selectedPatientId || '',
+      doctorId: selectedDoctorId || '',
+      type: !editId ? 'Consultation' : 'Medicine',
       category: '',
       description: '',
       quantity: 1,
       amount: 0,
-      discount: 0,
       total: 0
     }]);
   };
@@ -112,7 +110,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     if (field === 'quantity' || field === 'amount') {
       value = Number(target.value);
       // If category is discount, make amount negative
-      if (field === 'amount' && items[index].category === 'Overall') {
+      if (field === 'amount' && items[index].type === 'Discount') {
         value = -Math.abs(value);
       }
     } else {
@@ -139,33 +137,80 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
 
     try {
       if (editId) {
-        // Update existing invoice
-        const response = await fetch(`/api/cash/invoices`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: editId,
-            status: 'Complete'
-          }),
-        });
+        // Edit mode: Handle consultation with PUT, others with POST
+        const consultationItems = items.filter(item => item.type === 'Consultation');
+        const otherItems = items.filter(item => item.type !== 'Consultation');
+        
+        console.log("Edit mode - Consultation items:", consultationItems);
+        console.log("Edit mode - Other items:", otherItems);      
+                
+        // Append other items with POST
+        if (otherItems.length > 0) {
+          const response = await fetch('/api/cash/invoices', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              items: otherItems,
+              status: 'Ready',
+              invoiceId: editId // Carry forward the existing invoice ID
+            }),
+          });
 
-        if (!response.ok) {
-          const errorData = await response.json() as { error?: string };
-          throw new Error(errorData.error || 'Failed to update invoice');
+          if (!response.ok) {
+            const errorData = await response.json() as { error?: string };
+            throw new Error(errorData.error || 'Failed to create additional items');
+          }
+        }
+
+        // Update consultation items with PUT
+        if (consultationItems.length > 0) {
+          const response = await fetch(`/api/cash/invoices`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: editId,
+              status: 'Complete'
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json() as { error?: string };
+            throw new Error(errorData.error || 'Failed to update consultation');
+          }
         }
 
         toast.success('Invoice updated successfully');
       } else {
         // Create new invoice
+        console.log("Submitting items:", items);
+        
+        // Filter out items with missing required fields
+        const validItems = items.filter(item => 
+          item.patientId && 
+          item.doctorId && 
+          item.type && 
+          item.category && 
+          item.quantity > 0 && 
+          item.amount > 0
+        );
+        
+        console.log("Valid items to submit:", validItems);
+        
+        if (validItems.length === 0) {
+          throw new Error('Please fill in all required fields for at least one item');
+        }
+        
         const response = await fetch('/api/cash/invoices', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            items: items,
+            items: validItems,
             status: 'Ready'
           }),
         });
@@ -241,7 +286,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
             <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b text-gray-700">
-                  <th className="text-left p-2 w-24">Patient ID</th>
+                  {!editId && <th className="text-left p-2 w-24">Patient ID</th>}
                   <th className="text-left p-2 w-24">Doctor ID</th>
                   <th className="text-left p-2 w-28">Type</th>
                   <th className="text-left p-2 w-32">Category</th>
@@ -255,15 +300,17 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index} className="border-b">
-                    <td className="p-2">
-                      <Input
-                        value={item.patientId}
-                        onChange={handleInputChange(index, 'patientId')}
-                        placeholder="Patient ID"
-                        required
-                        className="w-full"
-                      />
-                    </td>
+                    {!editId && (
+                      <td className="p-2">
+                        <Input
+                          value={item.patientId}
+                          onChange={handleInputChange(index, 'patientId')}
+                          placeholder="Patient ID"
+                          required
+                          className="w-full"
+                        />
+                      </td>
+                    )}
                     <td className="p-2">
                       <Input
                         value={item.doctorId}
