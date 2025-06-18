@@ -748,43 +748,43 @@ export const roleBasedMenus: RoleMenu[] = [
         //   }
         // ]
       },
-      {
-        id: "payments",
-        label: "Payment Methods",
-        icon: CreditCard,
-        path: "/cash/payments",
-        description: "Manage different payment methods",
-        subItems: [
-          {
-            id: "cash-payments",
-            label: "Cash Payments",
-            icon: Banknote,
-            path: "/cash/payments/cash",
-            description: "Handle cash transactions"
-          },
-          {
-            id: "upi-payments",
-            label: "UPI Payments",
-            icon: Smartphone,
-            path: "/cash/payments/upi",
-            description: "Process UPI transactions"
-          },
-          {
-            id: "card-payments",
-            label: "Card Payments",
-            icon: CreditCard,
-            path: "/cash/payments/card",
-            description: "Handle card payments"
-          },
-          {
-            id: "payment-reconciliation",
-            label: "Reconciliation",
-            icon: Calculator,
-            path: "/cash/payments/reconciliation",
-            description: "Daily payment reconciliation"
-          }
-        ]
-      },
+      // {
+      //   id: "payments",
+      //   label: "Payment Methods",
+      //   icon: CreditCard,
+      //   path: "/cash/payments",
+      //   description: "Manage different payment methods",
+      //   subItems: [
+      //     {
+      //       id: "cash-payments",
+      //       label: "Cash Payments",
+      //       icon: Banknote,
+      //       path: "/cash/payments/cash",
+      //       description: "Handle cash transactions"
+      //     },
+      //     {
+      //       id: "upi-payments",
+      //       label: "UPI Payments",
+      //       icon: Smartphone,
+      //       path: "/cash/payments/upi",
+      //       description: "Process UPI transactions"
+      //     },
+      //     {
+      //       id: "card-payments",
+      //       label: "Card Payments",
+      //       icon: CreditCard,
+      //       path: "/cash/payments/card",
+      //       description: "Handle card payments"
+      //     },
+      //     {
+      //       id: "payment-reconciliation",
+      //       label: "Reconciliation",
+      //       icon: Calculator,
+      //       path: "/cash/payments/reconciliation",
+      //       description: "Daily payment reconciliation"
+      //     }
+      //   ]
+      // },
       {
         id: "receipts",
         label: "Receipt Management",

@@ -1,3 +1,4 @@
+// src/app/cash/financials/page.tsx
 'use client';
 
 import * as React from 'react';
@@ -38,8 +39,11 @@ export default function CashDashboardPage() {
         throw new Error('Failed to fetch dashboard data');
       }
       const data = await response.json() as DashboardData;
-      console.log("data===========================",data);
       setDashboardData(data);
+      console.log("dashboardData===========================",data);
+      console.log("dashboardData.summary===========================",data.summary);
+      console.log("dashboardData.recentTransactions===========================",data.recentTransactions);
+      console.log("dashboardData.paymentMethods===========================",data.paymentMethods); 
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -91,7 +95,12 @@ export default function CashDashboardPage() {
             </div>
             <div>
               <Typography variant="small" color="muted">Today's Revenue</Typography>
-              <Typography variant="h4">{formatCurrency(dashboardData?.summary.todayRevenue || 0)}</Typography>
+              <Typography variant="h4">{new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(dashboardData?.summary.todayRevenue || 0)}</Typography>
             </div>
           </div>
         </Card>
@@ -103,7 +112,12 @@ export default function CashDashboardPage() {
             </div>
             <div>
               <Typography variant="small" color="muted">Monthly Revenue</Typography>
-              <Typography variant="h4">{formatCurrency(dashboardData?.summary.monthlyRevenue || 0)}</Typography>
+              <Typography variant="h4">{new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(dashboardData?.summary.monthlyRevenue || 0)}</Typography>
             </div>
           </div>
         </Card>
@@ -127,7 +141,12 @@ export default function CashDashboardPage() {
             </div>
             <div>
               <Typography variant="small" color="muted">Pending Payments</Typography>
-              <Typography variant="h4">{formatCurrency(dashboardData?.summary.pendingPayments || 0)}</Typography>
+              <Typography variant="h4">{new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(dashboardData?.summary.pendingPayments || 0)}</Typography>
             </div>
           </div>
         </Card>
@@ -154,7 +173,12 @@ export default function CashDashboardPage() {
                       className={transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'}
                     >
                       {transaction.type === 'Income' ? '+' : '-'}
-                      {formatCurrency(transaction.cash + transaction.upi)}
+                      {new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      }).format(transaction.cash + transaction.upi)}
                     </Typography>
                   </div>
                 </div>
@@ -174,13 +198,23 @@ export default function CashDashboardPage() {
                     <div>
                       <Typography variant="small" color="muted">Income</Typography>
                       <Typography variant="small" className="text-green-600">
-                        {formatCurrency(data.income)}
+                        {new Intl.NumberFormat('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }).format(data.income)}
                       </Typography>
                     </div>
                     <div>
                       <Typography variant="small" color="muted">Expenses</Typography>
                       <Typography variant="small" className="text-red-600">
-                        {formatCurrency(data.expenses)}
+                        {new Intl.NumberFormat('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }).format(data.expenses)}
                       </Typography>
                     </div>
                     <div>
@@ -189,7 +223,12 @@ export default function CashDashboardPage() {
                         variant="small" 
                         className={data.income - data.expenses >= 0 ? 'text-green-600' : 'text-red-600'}
                       >
-                        {formatCurrency(data.income - data.expenses)}
+                        {new Intl.NumberFormat('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }).format(data.income - data.expenses)}
                       </Typography>
                     </div>
                   </div>
