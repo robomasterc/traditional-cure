@@ -170,7 +170,6 @@ export default function BillingPage() {
   };
 
   const handleEditInvoice = (invoice: any) => {
-    console.log("Editing invoice:", invoice);
     
     // Extract patient and doctor IDs from the invoice
     setSelectedPatientId(invoice.patientId);
@@ -179,7 +178,7 @@ export default function BillingPage() {
     // Convert the items array to the format expected by InvoiceDialog
     const editItems = invoice.items.map((item: any) => ({
       patientId: invoice.patientId,
-      doctorId: invoice.doctorId,
+      doctorId: item.doctorId,
       type: item.type as 'Consultation' | 'Medicine' | 'Procedure' | 'Discount',
       category: item.category,
       description: item.description,

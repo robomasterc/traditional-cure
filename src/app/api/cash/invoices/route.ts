@@ -71,15 +71,15 @@ export async function GET(request: NextRequest) {
       const invoiceId = invoice.id;
       
       if (!acc[invoiceId]) {
-        // Initialize with consultation details if this is a consultation
+        // Initialize with basic invoice details
         acc[invoiceId] = {
           id: invoiceId,
-          patientId: invoice.type === 'Consultation' ? invoice.patientId : '',
-          doctorId: invoice.type === 'Consultation' ? invoice.doctorId : '',
-          category: invoice.type === 'Consultation' ? invoice.category : '',
-          description: invoice.type === 'Consultation' ? invoice.description : '',
-          quantity: invoice.type === 'Consultation' ? invoice.quantity : '',
-          amount: invoice.type === 'Consultation' ? invoice.amount : '',
+          patientId: invoice.patientId,
+          doctorId: '',
+          category: '',
+          description: '',
+          quantity: '',
+          amount: '',
           total: 0,
           status: invoice.status,
           createdBy: invoice.createdBy,
@@ -90,6 +90,7 @@ export async function GET(request: NextRequest) {
       
       // Add this item to the items array
       acc[invoiceId].items.push({
+        doctorId: invoice.doctorId,
         type: invoice.type,
         category: invoice.category,
         description: invoice.description,
@@ -98,14 +99,21 @@ export async function GET(request: NextRequest) {
         total: invoice.total
       });
       
+      // If this is a consultation item, update the main invoice details
+      if (invoice.type === 'Consultation') {
+        acc[invoiceId].doctorId = invoice.doctorId;
+        acc[invoiceId].category = invoice.category;
+        acc[invoiceId].description = invoice.description;
+        acc[invoiceId].quantity = invoice.quantity;
+        acc[invoiceId].amount = invoice.amount;
+      }
+      
       // Add to total
       acc[invoiceId].total += invoice.total;
       
       return acc;
     }, {});
-    
-    console.log("groupedInvoices>>>>>>>=========", groupedInvoices);
-    
+        
     // Convert to array and sort by creation date
     const result = Object.values(groupedInvoices).sort((a: any, b: any) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

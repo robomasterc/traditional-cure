@@ -53,7 +53,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       // Reset form for new consultation
       setItems([{
         patientId: selectedPatientId || '',
-        doctorId: selectedDoctorId || '',
+        doctorId: '',
         type: !editId ? 'Consultation' : 'Medicine',
         category: '',
         description: '',

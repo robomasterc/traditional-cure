@@ -687,36 +687,36 @@ export const roleBasedMenus: RoleMenu[] = [
         icon: Receipt,
         path: "/cash/billing",
         description: "Process patient payments and billing",
-        subItems: [
-          {
-            id: "consultation-billing",
-            label: "Consultation Billing",
-            icon: Stethoscope,
-            path: "/cash/billing/consultation",
-            description: "Bill consultation fees"
-          },
-          {
-            id: "medicine-billing",
-            label: "Medicine Billing",
-            icon: Pill,
-            path: "/cash/billing/medicine",
-            description: "Process medicine payments"
-          },
-          {
-            id: "treatment-billing",
-            label: "Treatment Billing",
-            icon: Heart,
-            path: "/cash/billing/treatment",
-            description: "Bill treatment packages"
-          },
-          {
-            id: "pending-payments",
-            label: "Pending Payments",
-            icon: Clock,
-            path: "/cash/billing/pending",
-            description: "Outstanding patient bills"
-          }
-        ]
+        // subItems: [
+        //   {
+        //     id: "consultation-billing",
+        //     label: "Consultation Billing",
+        //     icon: Stethoscope,
+        //     path: "/cash/billing/consultation",
+        //     description: "Bill consultation fees"
+        //   },
+        //   {
+        //     id: "medicine-billing",
+        //     label: "Medicine Billing",
+        //     icon: Pill,
+        //     path: "/cash/billing/medicine",
+        //     description: "Process medicine payments"
+        //   },
+        //   {
+        //     id: "treatment-billing",
+        //     label: "Treatment Billing",
+        //     icon: Heart,
+        //     path: "/cash/billing/treatment",
+        //     description: "Bill treatment packages"
+        //   },
+        //   {
+        //     id: "pending-payments",
+        //     label: "Pending Payments",
+        //     icon: Clock,
+        //     path: "/cash/billing/pending",
+        //     description: "Outstanding patient bills"
+        //   }
+        // ]
       },
       {
         id: "transactions",

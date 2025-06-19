@@ -40,10 +40,6 @@ export default function CashDashboardPage() {
       }
       const data = await response.json() as DashboardData;
       setDashboardData(data);
-      console.log("dashboardData===========================",data);
-      console.log("dashboardData.summary===========================",data.summary);
-      console.log("dashboardData.recentTransactions===========================",data.recentTransactions);
-      console.log("dashboardData.paymentMethods===========================",data.paymentMethods); 
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
