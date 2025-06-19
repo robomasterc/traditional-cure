@@ -149,7 +149,7 @@ export default function CashDashboardPage() {
       </div>
 
       <Card className="p-6">
-        <Tabs defaultValue="transactions" className="w-full">
+        <Tabs defaultValue="payments" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="transactions">Recent Transactions</TabsTrigger>
             <TabsTrigger value="payments">Payment Methods</TabsTrigger>
@@ -184,52 +184,67 @@ export default function CashDashboardPage() {
 
           <TabsContent value="payments" className="mt-6">
             <Typography variant="h4" className="mb-4">Payment Methods</Typography>
-            <div className="space-y-4">
-              {Object.entries(dashboardData?.paymentMethods || {}).map(([method, data]) => (
-                <div key={method} className="p-4 bg-white rounded-lg border">
-                  <Typography variant="small" className="font-medium mb-2">
-                    {method}
-                  </Typography>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Typography variant="small" color="muted">Income</Typography>
-                      <Typography variant="small" className="text-green-600">
-                        {new Intl.NumberFormat('en-IN', {
-                          style: 'currency',
-                          currency: 'INR',
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        }).format(data.income)}
-                      </Typography>
-                    </div>
-                    <div>
-                      <Typography variant="small" color="muted">Expenses</Typography>
-                      <Typography variant="small" className="text-red-600">
-                        {new Intl.NumberFormat('en-IN', {
-                          style: 'currency',
-                          currency: 'INR',
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        }).format(data.expenses)}
-                      </Typography>
-                    </div>
-                    <div>
-                      <Typography variant="small" color="muted">Net</Typography>
-                      <Typography 
-                        variant="small" 
-                        className={data.income - data.expenses >= 0 ? 'text-green-600' : 'text-red-600'}
-                      >
-                        {new Intl.NumberFormat('en-IN', {
-                          style: 'currency',
-                          currency: 'INR',
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        }).format(data.income - data.expenses)}
-                      </Typography>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-4">
+                      <Typography variant="small" className="font-medium">Payment Method</Typography>
+                    </th>
+                    <th className="text-right p-4">
+                      <Typography variant="small" className="font-medium">Income</Typography>
+                    </th>
+                    <th className="text-right p-4">
+                      <Typography variant="small" className="font-medium">Expenses</Typography>
+                    </th>
+                    <th className="text-right p-4">
+                      <Typography variant="small" className="font-medium">Net</Typography>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(dashboardData?.paymentMethods || {}).map(([method, data]) => (
+                    <tr key={method} className="border-b">
+                      <td className="p-4">
+                        <Typography variant="small">{method}</Typography>
+                      </td>
+                      <td className="text-right p-4">
+                        <Typography variant="small" className="text-green-600">
+                          {new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(data.income)}
+                        </Typography>
+                      </td>
+                      <td className="text-right p-4">
+                        <Typography variant="small" className="text-red-600">
+                          {new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(data.expenses)}
+                        </Typography>
+                      </td>
+                      <td className="text-right p-4">
+                        <Typography 
+                          variant="small"
+                          className={data.income - data.expenses >= 0 ? 'text-green-600' : 'text-red-600'}
+                        >
+                          {new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(data.income - data.expenses)}
+                        </Typography>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </TabsContent>
         </Tabs>
