@@ -119,7 +119,7 @@ export default function IncomeEntryPage() {
               <Input
                 id="cash"
                 name="cash"
-                type="decimal"
+                type="number"
                 placeholder="Enter cash amount"
                 value={formData.cash}
                 onChange={handleChange}
@@ -131,7 +131,7 @@ export default function IncomeEntryPage() {
               <Input
                 id="upi"
                 name="upi"
-                type="decimal"
+                type="number"
                 placeholder="Enter UPI amount"
                 value={formData.upi}
                 onChange={handleChange}

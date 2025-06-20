@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Typography } from './typography';
 import { Button } from './button';
 import { ChevronLeft, ChevronRight, User, ChevronDown } from 'lucide-react';
 import { getMenuByRole } from '@/config/menu';
+import { useTabNavigation } from '@/hooks/useTabNavigation';
 import {
   Tooltip,
   TooltipContent,
@@ -25,8 +24,7 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
   const [expandedRole, setExpandedRole] = useState<string | null>(null);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [showUserRoles, setShowUserRoles] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  const { openTab } = useTabNavigation();
 
   // Set first role as expanded by default
   useEffect(() => {
@@ -49,6 +47,16 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
 
   const toggleUserRoles = () => {
     setShowUserRoles(!showUserRoles);
+  };
+
+  const handleMenuClick = (menuItem: any, color?: string) => {
+    if (menuItem.subItems) {
+      toggleSubmenu(menuItem.label);
+      return;
+    }
+
+    // Open tab for the menu item
+    openTab(menuItem.path, menuItem.label, menuItem.icon, color);
   };
 
   return (
@@ -111,23 +119,16 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                   </button>
 
                   {/* Role Menu Items */}
-                  {expandedRole === role && !isCollapsed && (
+                  {expandedRole === role && (
                     <div className="">
                       {menu.menuItems.map((item) => (
                         <div key={item.id}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => {
-                                  if (item.subItems) {
-                                    toggleSubmenu(item.label);
-                                  } else {
-                                    router.push(item.path);
-                                  }
-                                }}
+                                onClick={() => handleMenuClick(item, menu.primaryColor)}
                                 className={cn(
-                                  "w-full flex flex-col sm:flex-row items-center p-2 rounded-md hover:bg-gray-100",
-                                  pathname?.startsWith(item.path) && "bg-gray-100"
+                                  "w-full flex flex-col sm:flex-row items-center p-2 rounded-md hover:bg-gray-100"
                                 )}
                               >
                                 <item.icon size={20} className="text-green-600" />
@@ -140,20 +141,19 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                           </Tooltip>
 
                           {/* Submenu */}
-                          {expandedMenu === item.label && item.subItems && (
+                          {item.subItems && expandedMenu === item.label && (
                             <div className="ml-8 mt-1 space-y-1">
                               {item.subItems.map((subItem) => (
                                 <Tooltip key={subItem.id}>
                                   <TooltipTrigger asChild>
-                                    <Link
-                                      href={subItem.path}
+                                    <button
+                                      onClick={() => handleMenuClick(subItem, menu.primaryColor)}
                                       className={cn(
-                                        "block p-2 rounded-md hover:bg-gray-100",
-                                        pathname === subItem.path && "bg-gray-100"
+                                        "block p-2 rounded-md hover:bg-gray-100 w-full text-left"
                                       )}
                                     >
                                       <Typography variant="small">{subItem.label}</Typography>
-                                    </Link>
+                                    </button>
                                   </TooltipTrigger>
                                   <TooltipContent side="right">
                                     <p>{subItem.description}</p>
@@ -220,11 +220,9 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">
-          <Link href="/auth/signout">
-            <Button variant="outline" size="sm" className="w-full">
-              Sign Out
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" className="w-full">
+            Sign Out
+          </Button>
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+'use client';
 
-export default async function DashboardPage() {  
-  const session = await getServerSession(authOptions); 
-  // console.log(session);
+import { useSession } from "next-auth/react";
+
+export default function DashboardPage() {  
+  const { data: session } = useSession();
 
   return (
     <div className="bg-white shadow rounded-lg p-6">

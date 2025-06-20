@@ -113,8 +113,7 @@ export function TransactionModal({ isOpen, onClose, type, onSuccess }: Transacti
               <Input
                 id="cash"
                 name="cash"
-                type="decimal"
-                required
+                type="number"
                 placeholder="Enter cash amount"
                 value={formData.cash}
                 onChange={handleChange}
@@ -126,8 +125,7 @@ export function TransactionModal({ isOpen, onClose, type, onSuccess }: Transacti
               <Input
                 id="upi"
                 name="upi"
-                type="decimal"
-                required
+                type="number"
                 placeholder="Enter UPI amount"
                 value={formData.upi}
                 onChange={handleChange}

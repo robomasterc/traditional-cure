@@ -1,30 +1,54 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+'use client';
+
 import { Container } from "@/components/ui/container";
 import { Sidebar } from "@/components/ui/sidebar";
+import { TabProvider } from "@/contexts/TabContext";
+import { TabBar } from "@/components/ui/tab-bar";
+import { TabContent } from "@/components/ui/tab-content";
 import { UserRole } from "@/types/auth";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
-export default async function CashLayout({
+export default function CashLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/login");
+    }
+  }, [status]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   if (!session?.user) {
-    redirect("/login");
+    return null;
   }
 
   const userRoles = (session as any).roles as UserRole[] || [];
   const userName = session.user.name || 'User';
 
   return (
-    <div className="flex h-screen">
-      <Sidebar userRoles={userRoles} userName={userName} />
-      <main className="flex-1 overflow-y-auto bg-gray-50">
-        <Container className="py-6">{children}</Container>
-      </main>
-    </div>
+    <TabProvider>
+      <div className="flex h-screen">
+        <Sidebar userRoles={userRoles} userName={userName} />
+        <main className="flex-1 flex flex-col bg-gray-50">
+          <TabBar />
+          <div className="flex-1 overflow-hidden">
+            <TabContent className="p-6" />
+          </div>
+        </main>
+      </div>
+    </TabProvider>
   );
 } 
