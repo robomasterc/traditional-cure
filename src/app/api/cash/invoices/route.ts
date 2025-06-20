@@ -19,6 +19,10 @@ const invoiceSchema = z.object({
   items: z.array(invoiceItemSchema),
   status: z.enum(['Ready', 'Complete']).default('Ready'),
   invoiceId: z.string().optional(), // Optional invoice ID for carrying forward during edit
+  paymentMethods: z.array(z.object({
+    method: z.enum(['Cash', 'UPI']),
+    amount: z.number()
+  })).optional(), // Optional payment methods
 });
 
 type InvoiceItem = z.infer<typeof invoiceItemSchema>;
@@ -183,8 +187,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json() as { id: string; status: string };
-    const { id, status } = body;
+    const body = await request.json() as { id: string; status: string; paymentMethods?: Array<{ method: string; amount: number }> };
+    const { id, status, paymentMethods } = body;
 
     if (!id || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -202,9 +206,76 @@ export async function PUT(request: NextRequest) {
     const updateRange = `Invoices!J${rowIndex + 1}`;
     await sheetsService.updateRow(updateRange, [status]);
 
+    // If status is being set to Complete, create transaction records
+    if (status === 'Complete') {
+      await createTransactionsFromInvoice(id, session.user.name || session.user.email || '', paymentMethods);
+    }
+
     return NextResponse.json({ message: 'Invoice updated successfully' });
   } catch (error) {
     console.error('Error updating invoice:', error);
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
+  }
+}
+
+// Helper function to create transactions from completed invoice
+async function createTransactionsFromInvoice(invoiceId: string, createdBy: string, paymentMethods?: Array<{ method: string; amount: number }>) {
+  try {
+    // Get all items for this invoice
+    const rows = await sheetsService.getRange('Invoices!A:L');
+    const invoiceItems = rows.filter((row: any[]) => row[0] === invoiceId);
+    
+    if (invoiceItems.length === 0) {
+      console.log('No items found for invoice:', invoiceId);
+      return;
+    }
+
+    // Get consultation item for patient/doctor details
+    const consultationItem = invoiceItems.find((row: any[]) => row[3] === 'Consultation');
+    const patientId = consultationItem ? consultationItem[1] : '';
+    const doctorId = consultationItem ? consultationItem[2] : '';
+
+    // Calculate total amount
+    const totalAmount = invoiceItems.reduce((sum: number, row: any[]) => sum + Number(row[8]), 0);
+
+    // Use provided payment methods or default to 70% cash, 30% UPI
+    let totalCash = 0;
+    let totalUPI = 0;
+    
+    if (paymentMethods && paymentMethods.length > 0) {
+      // Use provided payment methods
+      paymentMethods.forEach(pm => {
+        if (pm.method === 'Cash') {
+          totalCash += pm.amount;
+        } else if (pm.method === 'UPI') {
+          totalUPI += pm.amount;
+        }
+      });
+    } else {
+      // Default split: 70% cash, 30% UPI
+      totalCash = Math.round(totalAmount * 0.7);
+      totalUPI = totalAmount - totalCash;
+    }
+
+    // Create transaction record
+    const transactionValues = [
+      new Date().toISOString().replace(/[-:]/g, '').slice(0, 15), // ID
+      'Income', // Type
+      'Patient Billing', // Category
+      totalCash.toString(), // Cash amount
+      totalUPI.toString(), // UPI amount
+      `Invoice ${invoiceId} - ${patientId}`, // Description
+      patientId, // Patient ID
+      doctorId, // Staff ID (using doctor ID)
+      new Date().toISOString().split('T')[0], // Date
+      createdBy, // Created by
+      new Date().toISOString() // Created at
+    ];
+
+    await sheetsService.appendRow('Transactions!A:J', transactionValues);
+    console.log('Transaction created for invoice:', invoiceId, 'Cash:', totalCash, 'UPI:', totalUPI);
+    
+  } catch (error) {
+    console.error('Error creating transaction from invoice:', error);
   }
 } 

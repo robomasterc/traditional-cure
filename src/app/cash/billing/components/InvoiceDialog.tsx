@@ -20,6 +20,11 @@ interface InvoiceItem {
   total: number;
 }
 
+interface PaymentMethod {
+  method: 'Cash' | 'UPI';
+  amount: number;
+}
+
 interface InvoiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,6 +47,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       amount: 0,
       total: 0
     }
+  ]);
+  const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[]>([
+    { method: 'Cash', amount: 0 }
   ]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -130,12 +138,40 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     }, 0);
   };
 
+  const calculatePaymentTotal = () => {
+    return paymentMethods.reduce((sum, pm) => sum + pm.amount, 0);
+  };
+
+  const addPaymentMethod = () => {
+    setPaymentMethods([...paymentMethods, { method: 'UPI', amount: 0 }]);
+  };
+
+  const removePaymentMethod = (index: number) => {
+    if (paymentMethods.length > 1) {
+      setPaymentMethods(paymentMethods.filter((_, i) => i !== index));
+    }
+  };
+
+  const updatePaymentMethod = (index: number, field: keyof PaymentMethod, value: any) => {
+    const newPaymentMethods = [...paymentMethods];
+    newPaymentMethods[index] = { ...newPaymentMethods[index], [field]: value };
+    setPaymentMethods(newPaymentMethods);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null); // Clear any previous errors
 
     try {
+      // Validate payment methods
+      const invoiceTotal = calculateTotal();
+      const paymentTotal = calculatePaymentTotal();
+      
+      if (paymentTotal !== invoiceTotal) {
+        throw new Error(`Payment total (₹${paymentTotal}) must equal invoice total (₹${invoiceTotal})`);
+      }
+
       if (editId) {
         // Edit mode: Handle consultation with PUT, others with POST
         const consultationItems = items.filter(item => item.type === 'Consultation');
@@ -154,7 +190,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
             body: JSON.stringify({
               items: otherItems,
               status: 'Ready',
-              invoiceId: editId // Carry forward the existing invoice ID
+              invoiceId: editId, // Carry forward the existing invoice ID
+              paymentMethods: paymentMethods // Include payment methods
             }),
           });
 
@@ -173,7 +210,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
             },
             body: JSON.stringify({
               id: editId,
-              status: 'Complete'
+              status: 'Complete',
+              paymentMethods: paymentMethods // Include payment methods for transaction creation
             }),
           });
 
@@ -211,7 +249,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
           },
           body: JSON.stringify({
             items: validItems,
-            status: 'Ready'
+            status: 'Ready',
+            paymentMethods: paymentMethods // Include payment methods
           }),
         });
 
@@ -262,7 +301,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editId ? 'Edit Invoice' : 'Add New Invoice'}
+            {editId ? 'Edit Invoice For: ' + items[0].patientId : 'Add New Invoice'}
           </DialogTitle>
         </DialogHeader>
 
@@ -422,15 +461,62 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
               <Plus className="w-4 h-4 mr-2" />
               Add Item
             </Button>
+          </div>
 
-            <div className="space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Processing...' : (editId ? 'Update Invoice' : 'Create Invoice')}
-              </Button>
+          {/* Payment Methods Section */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Payment Methods</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cash-amount">Cash Amount</Label>
+                <Input
+                  id="cash-amount"
+                  type="number"
+                  value={paymentMethods.find(p => p.method === 'Cash')?.amount || 0}
+                  onChange={(e) => {
+                    const target = e.target as unknown as { value: string };
+                    updatePaymentMethod(0, 'amount', Number(target.value));
+                  }}
+                  placeholder="Enter cash amount"
+                  className="w-full"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <Label htmlFor="upi-amount">UPI Amount</Label>
+                <Input
+                  id="upi-amount"
+                  type="number"
+                  value={paymentMethods.find(p => p.method === 'UPI')?.amount || 0}
+                  onChange={(e) => {
+                    const target = e.target as unknown as { value: string };
+                    updatePaymentMethod(1, 'amount', Number(target.value));
+                  }}
+                  placeholder="Enter UPI amount"
+                  className="w-full"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
             </div>
+            <div className="mt-3 text-sm text-gray-600">
+              Payment Total: ₹{calculatePaymentTotal().toFixed(2)}
+              {calculatePaymentTotal() !== calculateTotal() && (
+                <span className="text-red-600 ml-2">
+                  (Must equal invoice total)
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Processing...' : (editId ? 'Update Invoice' : 'Create Invoice')}
+            </Button>
           </div>
         </form>
       </DialogContent>
