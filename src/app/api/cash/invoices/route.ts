@@ -173,6 +173,11 @@ export async function POST(request: NextRequest) {
       await sheetsService.appendRow('Invoices!A:L', values);
     }
 
+    // Create transaction for new invoice
+    if (validatedData.status === 'Ready' && validatedData.paymentMethods && validatedData.paymentMethods.length > 0) {
+      createTransactionFromInvoice(validatedData.invoiceId || Date.now().toString(), validatedData.items[0].patientId, validatedData.items[0].doctorId, validatedData.paymentMethods, createdBy);
+    }
+
     return NextResponse.json({ message: 'Invoice created successfully' });
   } catch (error) {
     console.error('Error creating invoice:', error);
@@ -206,9 +211,9 @@ export async function PUT(request: NextRequest) {
     const updateRange = `Invoices!J${rowIndex + 1}`;
     await sheetsService.updateRow(updateRange, [status]);
 
-    // If status is being set to Complete, create transaction records
-    if (status === 'Complete') {
-      await createTransactionsFromInvoice(id, session.user.name || session.user.email || '', paymentMethods);
+    // If status is being set to Complete and payment methods provided, update transaction
+    if (status === 'Complete' && paymentMethods && paymentMethods.length > 0) {
+      updateTransactionFromInvoice(id, paymentMethods, session.user.name || session.user.email || '');
     }
 
     return NextResponse.json({ message: 'Invoice updated successfully' });
@@ -219,24 +224,72 @@ export async function PUT(request: NextRequest) {
 }
 
 // Helper function to create transactions from completed invoice
-async function createTransactionsFromInvoice(invoiceId: string, createdBy: string, paymentMethods?: Array<{ method: string; amount: number }>) {
-  try {
-    // Get all items for this invoice
-    const rows = await sheetsService.getRange('Invoices!A:L');
-    const invoiceItems = rows.filter((row: any[]) => row[0] === invoiceId);
+// async function createTransactionsFromInvoice(invoiceId: string, createdBy: string, paymentMethods?: Array<{ method: string; amount: number }>) {
+//   try {
+//     // Get all items for this invoice
+//     const rows = await sheetsService.getRange('Invoices!A:L');
+//     const invoiceItems = rows.filter((row: any[]) => row[0] === invoiceId);
     
-    if (invoiceItems.length === 0) {
-      console.log('No items found for invoice:', invoiceId);
-      return;
-    }
+//     if (invoiceItems.length === 0) {
+//       console.log('No items found for invoice:', invoiceId);
+//       return;
+//     }
 
-    // Get consultation item for patient/doctor details
-    const consultationItem = invoiceItems.find((row: any[]) => row[3] === 'Consultation');
-    const patientId = consultationItem ? consultationItem[1] : '';
-    const doctorId = consultationItem ? consultationItem[2] : '';
+//     // Get consultation item for patient/doctor details
+//     const consultationItem = invoiceItems.find((row: any[]) => row[3] === 'Consultation');
+//     const patientId = consultationItem ? consultationItem[1] : '';
+//     const doctorId = consultationItem ? consultationItem[2] : '';
 
+//     // Calculate total amount
+//     const totalAmount = invoiceItems.reduce((sum: number, row: any[]) => sum + Number(row[8]), 0);
+
+//     // Use provided payment methods or default to 70% cash, 30% UPI
+//     let totalCash = 0;
+//     let totalUPI = 0;
+    
+//     if (paymentMethods && paymentMethods.length > 0) {
+//       // Use provided payment methods
+//       paymentMethods.forEach(pm => {
+//         if (pm.method === 'Cash') {
+//           totalCash += pm.amount;
+//         } else if (pm.method === 'UPI') {
+//           totalUPI += pm.amount;
+//         }
+//       });
+//     } else {
+//       // Default split: 70% cash, 30% UPI
+//       totalCash = Math.round(totalAmount * 0.7);
+//       totalUPI = totalAmount - totalCash;
+//     }
+
+//     // Create transaction record
+//     const transactionValues = [
+//       new Date().toISOString().replace(/[-:]/g, '').slice(0, 15), // ID
+//       'Income', // Type
+//       'Patient Billing', // Category
+//       totalCash.toString(), // Cash amount
+//       totalUPI.toString(), // UPI amount
+//       `Invoice ${invoiceId} - ${patientId}`, // Description
+//       patientId, // Patient ID
+//       doctorId, // Staff ID (using doctor ID)
+//       new Date().toISOString().split('T')[0], // Date
+//       createdBy, // Created by
+//       new Date().toISOString() // Created at
+//     ];
+
+//     await sheetsService.appendRow('Transactions!A:J', transactionValues);
+//     console.log('Transaction created for invoice:', invoiceId, 'Cash:', totalCash, 'UPI:', totalUPI);
+    
+//   } catch (error) {
+//     console.error('Error creating transaction from invoice:', error);
+//   }
+// }
+
+// Helper function to create transaction from new invoice
+async function createTransactionFromInvoice(invoiceId: string, patientId: string, doctorId: string, paymentMethods: Array<{ method: string; amount: number }>, createdBy: string) {
+  try {
     // Calculate total amount
-    const totalAmount = invoiceItems.reduce((sum: number, row: any[]) => sum + Number(row[8]), 0);
+    const totalAmount = paymentMethods.reduce((sum: number, pm: { amount: number }) => sum + pm.amount, 0);
 
     // Use provided payment methods or default to 70% cash, 30% UPI
     let totalCash = 0;
@@ -259,7 +312,7 @@ async function createTransactionsFromInvoice(invoiceId: string, createdBy: strin
 
     // Create transaction record
     const transactionValues = [
-      new Date().toISOString().replace(/[-:]/g, '').slice(0, 15), // ID
+      `Inv-${invoiceId}`, // Description
       'Income', // Type
       'Patient Billing', // Category
       totalCash.toString(), // Cash amount
@@ -273,9 +326,83 @@ async function createTransactionsFromInvoice(invoiceId: string, createdBy: strin
     ];
 
     await sheetsService.appendRow('Transactions!A:J', transactionValues);
-    console.log('Transaction created for invoice:', invoiceId, 'Cash:', totalCash, 'UPI:', totalUPI);
-    
+
   } catch (error) {
     console.error('Error creating transaction from invoice:', error);
+  }
+}
+
+// Helper function to update transaction from completed invoice
+async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: Array<{ method: string; amount: number }>, createdBy: string) {
+  try {
+    // Get all items for this invoice
+    const rows = await sheetsService.getRange('Transactions!A:K');
+    const transactionRows = rows.filter((row: any[]) => row[0] === `Inv-${invoiceId}`);
+
+    console.log("transactionRows================", transactionRows);
+    
+    if (transactionRows.length === 0) {
+      console.log('No items found for invoice:', `Inv-${invoiceId}`);
+      return;
+    }
+
+    // Get consultation item for patient/doctor details
+    // const consultationItem = transactionItems.find((row: any[]) => row[3] === 'Consultation');
+    // const patientId = consultationItem ? consultationItem[1] : '';
+    // const doctorId = consultationItem ? consultationItem[2] : '';
+
+    // Calculate total amount
+    const totalAmount = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[3]) + Number(row[4]), 0);
+
+    // Use provided payment methods or default to 70% cash, 30% UPI
+    let totalCash = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[3]), 0);
+    let totalUPI = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[4]), 0);
+    
+    if (paymentMethods && paymentMethods.length > 0) {
+      // Use provided payment methods
+      paymentMethods.forEach(pm => {
+        if (pm.method === 'Cash') {
+          totalCash += pm.amount;
+        } else if (pm.method === 'UPI') {
+          totalUPI += pm.amount;
+        }
+      });
+    } else {
+      // Default split: 70% cash, 30% UPI
+      totalCash = Math.round(totalAmount * 0.7);
+      totalUPI = totalAmount - totalCash;
+    }
+
+    // Find existing transaction for this invoice
+    // const transactionRows = await sheetsService.getRange('Transactions!A:K');
+    const transactionRowIndex = rows.findIndex((row: any[]) => 
+      row[0] && row[0].includes(`Inv-${invoiceId}`)
+    );
+
+    if (transactionRowIndex === -1) {
+      console.log('No existing transaction found for invoice:', invoiceId);
+      return;
+    }
+
+    // Update transaction record
+    const transactionValues = [
+      transactionRows[0][0], // Keep existing ID
+      'Income', // Type
+      'Patient Billing', // Category
+      totalCash.toString(), // Cash amount
+      totalUPI.toString(), // UPI amount
+      `Invoice ${invoiceId} - ${transactionRows[0][6]}`, // Description
+      transactionRows[0][6], // Patient ID
+      transactionRows[0][7], // Staff ID (using doctor ID)
+      new Date().toISOString().split('T')[0], // Date
+      createdBy, // Created by
+      new Date().toISOString() // Created at
+    ];
+
+    const updateRange = `Transactions!A${transactionRowIndex + 1}:K${transactionRowIndex + 1}`;
+    await sheetsService.updateRow(updateRange, transactionValues);
+    
+  } catch (error) {
+    console.error('Error updating transaction from invoice:', error);
   }
 } 

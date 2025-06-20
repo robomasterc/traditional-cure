@@ -49,7 +49,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     }
   ]);
   const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[]>([
-    { method: 'Cash', amount: 0 }
+    { method: 'Cash', amount: 0 },
+    { method: 'UPI', amount: 0 }
   ]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -61,7 +62,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       // Reset form for new consultation
       setItems([{
         patientId: selectedPatientId || '',
-        doctorId: '',
+        doctorId: selectedDoctorId || '',
         type: !editId ? 'Consultation' : 'Medicine',
         category: '',
         description: '',
@@ -70,6 +71,13 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
         total: 0
       }]);
     }
+    
+    // Clear payment amounts on dialog open
+    setPaymentMethods([
+      { method: 'Cash', amount: 0 },
+      { method: 'UPI', amount: 0 }
+    ]);
+    
     // Clear any previous errors when opening dialog
     setError(null);
   }, [editData, isOpen, selectedPatientId, selectedDoctorId]);
@@ -189,7 +197,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
             },
             body: JSON.stringify({
               items: otherItems,
-              status: 'Ready',
+              status: 'Complete',
               invoiceId: editId, // Carry forward the existing invoice ID
               paymentMethods: paymentMethods // Include payment methods
             }),
@@ -356,7 +364,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onChange={handleInputChange(index, 'doctorId')}
                         placeholder="Doctor ID"
                         required
-                        className="w-full"
+                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       />
                     </td>
                     <td className="p-2">
@@ -365,8 +374,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onValueChange={(value: 'Consultation' | 'Medicine' | 'Procedure' | 'Discount') => 
                           updateItem(index, 'type', value)
                         }
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       >
-                        <SelectTrigger className="w-full text-gray-700 bg-white">
+                        <SelectTrigger className={`w-full text-gray-700 bg-white ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="text-gray-700 bg-white">
@@ -381,8 +391,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                       <Select
                         value={item.category}
                         onValueChange={(value) => updateItem(index, 'category', value)}
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       >
-                        <SelectTrigger className="w-full text-gray-700 bg-white">
+                        <SelectTrigger className={`w-full text-gray-700 bg-white ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}>
                           <SelectValue placeholder="Category" />
                         </SelectTrigger>
                         <SelectContent className="text-gray-700 bg-white">
@@ -399,7 +410,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         value={item.description}
                         onChange={handleInputChange(index, 'description')}
                         placeholder="Description"
-                        className="w-full"
+                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       />
                     </td>
                     <td className="p-2">
@@ -409,7 +421,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onChange={handleInputChange(index, 'quantity')}
                         min="0"
                         required
-                        className="w-full"
+                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       />
                     </td>
                     <td className="p-2">
@@ -420,7 +433,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         min="0"
                         step="0.01"
                         required
-                        className="w-full"
+                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation')}
                       />
                     </td>
                     <td className="p-2">
@@ -432,7 +446,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                       />
                     </td>
                     <td className="p-2">
-                      {items.length > 1 && (
+                      {items.length > 1 && !(editId && item.type === 'Consultation') && (
                         <Button
                           type="button"
                           variant="outline"
@@ -475,7 +489,10 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                   value={paymentMethods.find(p => p.method === 'Cash')?.amount || 0}
                   onChange={(e) => {
                     const target = e.target as unknown as { value: string };
-                    updatePaymentMethod(0, 'amount', Number(target.value));
+                    const cashIndex = paymentMethods.findIndex(p => p.method === 'Cash');
+                    if (cashIndex !== -1) {
+                      updatePaymentMethod(cashIndex, 'amount', Number(target.value));
+                    }
                   }}
                   placeholder="Enter cash amount"
                   className="w-full"
@@ -491,7 +508,10 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                   value={paymentMethods.find(p => p.method === 'UPI')?.amount || 0}
                   onChange={(e) => {
                     const target = e.target as unknown as { value: string };
-                    updatePaymentMethod(1, 'amount', Number(target.value));
+                    const upiIndex = paymentMethods.findIndex(p => p.method === 'UPI');
+                    if (upiIndex !== -1) {
+                      updatePaymentMethod(upiIndex, 'amount', Number(target.value));
+                    }
                   }}
                   placeholder="Enter UPI amount"
                   className="w-full"
