@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from 'next/link';
 
 interface SidebarProps {
   userRoles: string[];
@@ -219,10 +220,12 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <Button variant="outline" size="sm" className="w-full">
-            Sign Out
-          </Button>
+        <div className="p-4 border-t border-gray-200">          
+          <Link href="/auth/signout">
+            <Button variant="outline" size="sm" className="w-full">
+              Sign Out
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

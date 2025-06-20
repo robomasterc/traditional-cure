@@ -34,7 +34,7 @@ export function TabBar({ className }: TabBarProps) {
                   : "bg-gray-50 hover:bg-gray-100"
               )}
               style={{
-                backgroundColor: isActive ? `${tabColor}10` : undefined,
+                backgroundColor: isActive ? `${tabColor}50` : `${tabColor}25`,
                 borderBottomColor: isActive ? tabColor : undefined
               }}
             >
