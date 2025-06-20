@@ -18,6 +18,7 @@ export function useTabNavigation() {
         '/cash/billing': () => import('@/app/cash/billing/page'),
         '/cash/transactions/income': () => import('@/app/cash/transactions/income/page'),
         '/cash/transactions/expense': () => import('@/app/cash/transactions/expense/page'),
+        '/admin/financial': () => import('@/app/admin/financial/page'),
       };
 
       const importFn = componentMap[path];

@@ -129,21 +129,19 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                               <button
                                 onClick={() => handleMenuClick(item, menu.primaryColor)}
                                 className={cn(
-                                  "w-full flex flex-col sm:flex-row items-center p-2 rounded-md hover:bg-gray-100"
+                                  "w-full flex flex-col sm:flex-row items-center p-1 rounded-md hover:bg-gray-100"
                                 )}
                               >
                                 <item.icon size={20} className="text-green-600" />
-                                <Typography className="ml-3">{item.label}</Typography>
+                                {!isCollapsed && <Typography className="ml-3 text-sm">{item.label}</Typography>}
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="right">
-                              <p>{item.description}</p>
-                            </TooltipContent>
+                            <TooltipContent side="right"><p>{item.description}</p></TooltipContent>
                           </Tooltip>
 
                           {/* Submenu */}
                           {item.subItems && expandedMenu === item.label && (
-                            <div className="ml-8 mt-1 space-y-1">
+                            <div className="ml-8 mt-1 space-y-0.5">
                               {item.subItems.map((subItem) => (
                                 <Tooltip key={subItem.id}>
                                   <TooltipTrigger asChild>

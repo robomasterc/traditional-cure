@@ -202,37 +202,7 @@ export const roleBasedMenus: RoleMenu[] = [
         label: "Financial Management",
         icon: DollarSign,
         path: "/admin/financial",
-        description: "Complete financial oversight and reporting",
-        subItems: [
-          {
-            id: "transactions",
-            label: "All Transactions",
-            icon: Receipt,
-            path: "/admin/financial/transactions",
-            description: "View all income and expense transactions"
-          },
-          {
-            id: "profit-loss",
-            label: "P&L Statement",
-            icon: TrendingUp,
-            path: "/admin/financial/profit-loss",
-            description: "Profit and loss statements"
-          },
-          {
-            id: "cash-flow",
-            label: "Cash Flow",
-            icon: ArrowUpDown,
-            path: "/admin/financial/cash-flow",
-            description: "Monitor cash flow and liquidity"
-          },
-          {
-            id: "tax-reports",
-            label: "Tax Reports",
-            icon: FileSpreadsheet,
-            path: "/admin/financial/tax-reports",
-            description: "Generate tax compliance reports"
-          }
-        ]
+        description: "Complete financial oversight and reporting"
       },
       {
         id: "inventory",
@@ -665,22 +635,22 @@ export const roleBasedMenus: RoleMenu[] = [
     primaryColor: "#F59E0B", // Amber
     icon: DollarSign,
     menuItems: [
-      {
-        id: "dashboard",
-        label: "Financials",
-        icon: DollarSign,
-        path: "/cash/dashboard",
-        description: "Today's financial summary and transactions",
-        // subItems: [
-        //   {
-        //     id: "summary",
-        //     label: "Financial summary",
-        //     icon: DollarSign,
-        //     path: "/cash/dashboard",
-        //     description: "Financial Summary and Reports"
-        //   }
-        // ]
-      },
+      // {
+      //   id: "dashboard",
+      //   label: "Financials",
+      //   icon: DollarSign,
+      //   path: "/cash/dashboard",
+      //   description: "Today's financial summary and transactions",
+      //   // subItems: [
+      //   //   {
+      //   //     id: "summary",
+      //   //     label: "Financial summary",
+      //   //     icon: DollarSign,
+      //   //     path: "/cash/dashboard",
+      //   //     description: "Financial Summary and Reports"
+      //   //   }
+      //   // ]
+      // },
       {
         id: "billing",
         label: "Patient Billing",
