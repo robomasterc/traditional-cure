@@ -100,170 +100,170 @@ export const roleBasedMenus: RoleMenu[] = [
     primaryColor: "#8B5CF6", // Purple
     icon: CircleUserRound,    
     menuItems: [
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: LayoutDashboard,
-        path: "/admin/dashboard",
-        description: "Overview of practice performance and key metrics",
-        subItems: [
-          {
-            id: "analytics",
-            label: "Analytics",
-            icon: TrendingUp,
-            path: "/admin/analytics",
-            description: "Business intelligence and performance analytics"
-          },
-          {
-            id: "reports",
-            label: "Reports",
-            icon: FileText,
-            path: "/admin/reports",
-            description: "Generate comprehensive business reports"
-          }
-        ]
-      },
-      {
-        id: "patients",
-        label: "Patient Management",
-        icon: Users,
-        path: "/admin/patients",
-        description: "Complete patient database management",
-        subItems: [
-          {
-            id: "patient-list",
-            label: "All Patients",
-            icon: List,
-            path: "/admin/patients/list",
-            description: "View and manage all patient records"
-          },
-          {
-            id: "patient-add",
-            label: "Add Patient",
-            icon: UserPlus,
-            path: "/admin/patients/add",
-            description: "Register new patients"
-          },
-          {
-            id: "patient-analytics",
-            label: "Patient Analytics",
-            icon: BarChart3,
-            path: "/admin/patients/analytics",
-            description: "Patient demographics and treatment analytics"
-          }
-        ]
-      },
-      {
-        id: "staff",
-        label: "Staff Management",
-        icon: UserCog,
-        path: "/admin/staff",
-        description: "Employee management and administration",
-        subItems: [
-          {
-            id: "staff-list",
-            label: "All Staff",
-            icon: Users,
-            path: "/admin/staff/list",
-            description: "View all staff members and their details"
-          },
-          {
-            id: "staff-add",
-            label: "Add Staff",
-            icon: UserPlus,
-            path: "/admin/staff/add",
-            description: "Add new team members"
-          },
-          {
-            id: "attendance",
-            label: "Attendance",
-            icon: Clock,
-            path: "/admin/staff/attendance",
-            description: "Track staff attendance and working hours"
-          },
-          {
-            id: "payroll",
-            label: "Payroll",
-            icon: CreditCard,
-            path: "/admin/staff/payroll",
-            description: "Manage salaries and payments"
-          },
-          {
-            id: "performance",
-            label: "Performance",
-            icon: Target,
-            path: "/admin/staff/performance",
-            description: "Staff performance metrics and evaluations"
-          }
-        ]
-      },
+      // {
+      //   id: "dashboard",
+      //   label: "Dashboard",
+      //   icon: LayoutDashboard,
+      //   path: "/admin/dashboard",
+      //   description: "Overview of practice performance and key metrics",
+      //   subItems: [
+      //     {
+      //       id: "analytics",
+      //       label: "Analytics",
+      //       icon: TrendingUp,
+      //       path: "/admin/analytics",
+      //       description: "Business intelligence and performance analytics"
+      //     },
+      //     {
+      //       id: "reports",
+      //       label: "Reports",
+      //       icon: FileText,
+      //       path: "/admin/reports",
+      //       description: "Generate comprehensive business reports"
+      //     }
+      //   ]
+      // },
+      // {
+      //   id: "patients",
+      //   label: "Patient Management",
+      //   icon: Users,
+      //   path: "/admin/patients",
+      //   description: "Complete patient database management",
+      //   subItems: [
+      //     {
+      //       id: "patient-list",
+      //       label: "All Patients",
+      //       icon: List,
+      //       path: "/admin/patients/list",
+      //       description: "View and manage all patient records"
+      //     },
+      //     {
+      //       id: "patient-add",
+      //       label: "Add Patient",
+      //       icon: UserPlus,
+      //       path: "/admin/patients/add",
+      //       description: "Register new patients"
+      //     },
+      //     {
+      //       id: "patient-analytics",
+      //       label: "Patient Analytics",
+      //       icon: BarChart3,
+      //       path: "/admin/patients/analytics",
+      //       description: "Patient demographics and treatment analytics"
+      //     }
+      //   ]
+      // },
+      // {
+      //   id: "staff",
+      //   label: "Staff Management",
+      //   icon: UserCog,
+      //   path: "/admin/staff",
+      //   description: "Employee management and administration",
+      //   subItems: [
+      //     {
+      //       id: "staff-list",
+      //       label: "All Staff",
+      //       icon: Users,
+      //       path: "/admin/staff/list",
+      //       description: "View all staff members and their details"
+      //     },
+      //     {
+      //       id: "staff-add",
+      //       label: "Add Staff",
+      //       icon: UserPlus,
+      //       path: "/admin/staff/add",
+      //       description: "Add new team members"
+      //     },
+      //     {
+      //       id: "attendance",
+      //       label: "Attendance",
+      //       icon: Clock,
+      //       path: "/admin/staff/attendance",
+      //       description: "Track staff attendance and working hours"
+      //     },
+      //     {
+      //       id: "payroll",
+      //       label: "Payroll",
+      //       icon: CreditCard,
+      //       path: "/admin/staff/payroll",
+      //       description: "Manage salaries and payments"
+      //     },
+      //     {
+      //       id: "performance",
+      //       label: "Performance",
+      //       icon: Target,
+      //       path: "/admin/staff/performance",
+      //       description: "Staff performance metrics and evaluations"
+      //     }
+      //   ]
+      // },
       {
         id: "financial",
         label: "Financial Management",
         icon: DollarSign,
         path: "/admin/financial",
         description: "Complete financial oversight and reporting"
-      },
-      {
-        id: "inventory",
-        label: "Inventory Overview",
-        icon: Package,
-        path: "/admin/inventory",
-        description: "Complete inventory management oversight",
-        subItems: [
-          {
-            id: "stock-overview",
-            label: "Stock Overview",
-            icon: Boxes,
-            path: "/admin/inventory/overview",
-            description: "Overall inventory status and alerts"
-          },
-          {
-            id: "suppliers",
-            label: "Suppliers",
-            icon: Truck,
-            path: "/admin/inventory/suppliers",
-            description: "Manage supplier relationships"
-          },
-          {
-            id: "purchase-analytics",
-            label: "Purchase Analytics",
-            icon: ShoppingCart,
-            path: "/admin/inventory/analytics",
-            description: "Procurement and cost analysis"
-          }
-        ]
-      },
-      {
-        id: "settings",
-        label: "System Settings",
-        icon: Settings,
-        path: "/admin/settings",
-        description: "System configuration and administration",
-        subItems: [
-          {
-            id: "users",
-            label: "User Management",
-            icon: Shield,
-            path: "/admin/settings/users",
-            description: "Manage user accounts and permissions"
-          },
-          {
-            id: "backup",
-            label: "Backup & Export",
-            icon: Download,
-            path: "/admin/settings/backup",
-            description: "Data backup and export functions"
-          },
-          {
-            id: "compliance",
-            label: "Compliance",
-            icon: CheckCircle,
-            path: "/admin/settings/compliance",
-            description: "Regulatory compliance management"
-          }
-        ]
       }
+      // {
+      //   id: "inventory",
+      //   label: "Inventory Overview",
+      //   icon: Package,
+      //   path: "/admin/inventory",
+      //   description: "Complete inventory management oversight",
+      //   subItems: [
+      //     {
+      //       id: "stock-overview",
+      //       label: "Stock Overview",
+      //       icon: Boxes,
+      //       path: "/admin/inventory/overview",
+      //       description: "Overall inventory status and alerts"
+      //     },
+      //     {
+      //       id: "suppliers",
+      //       label: "Suppliers",
+      //       icon: Truck,
+      //       path: "/admin/inventory/suppliers",
+      //       description: "Manage supplier relationships"
+      //     },
+      //     {
+      //       id: "purchase-analytics",
+      //       label: "Purchase Analytics",
+      //       icon: ShoppingCart,
+      //       path: "/admin/inventory/analytics",
+      //       description: "Procurement and cost analysis"
+      //     }
+      //   ]
+      // },
+      // {
+      //   id: "settings",
+      //   label: "System Settings",
+      //   icon: Settings,
+      //   path: "/admin/settings",
+      //   description: "System configuration and administration",
+      //   subItems: [
+      //     {
+      //       id: "users",
+      //       label: "User Management",
+      //       icon: Shield,
+      //       path: "/admin/settings/users",
+      //       description: "Manage user accounts and permissions"
+      //     },
+      //     {
+      //       id: "backup",
+      //       label: "Backup & Export",
+      //       icon: Download,
+      //       path: "/admin/settings/backup",
+      //       description: "Data backup and export functions"
+      //     },
+      //     {
+      //       id: "compliance",
+      //       label: "Compliance",
+      //       icon: CheckCircle,
+      //       path: "/admin/settings/compliance",
+      //       description: "Regulatory compliance management"
+      //     }
+      //   ]
+      // }
     ]
   },
 
@@ -808,7 +808,7 @@ export const roleBasedMenus: RoleMenu[] = [
         id: "inventory",
         label: "Stock Management",
         icon: Boxes,
-        path: "/stock/inventory",
+        path: "/stock/inventory/",
         description: "Complete inventory control",
         subItems: [
           {

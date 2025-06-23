@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Minus, X, Trash2 } from 'lucide-react';
+import { useInventory } from '@/hooks/useInventory';
 
 interface InvoiceItem {
   patientId: string;
@@ -54,6 +55,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
   ]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Inventory hook for medicine selection
+  const { inventory, loading: inventoryLoading, getAvailableMedicines } = useInventory();
 
   React.useEffect(() => {
     if (editData && editData.length > 0) {
@@ -108,6 +112,17 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     // If category changed to 'Overall', make amount negative
     if (field === 'category' && value === 'Overall' && newItems[index].amount > 0) {
       newItems[index].amount = -newItems[index].amount;
+    }
+    
+    // If type is Medicine and category is selected, auto-fill from inventory
+    if (field === 'category' && newItems[index].type === 'Medicine' && value) {
+      const availableMedicines = getAvailableMedicines();
+      const selectedMedicine = availableMedicines.find(med => med.id === value);
+      if (selectedMedicine) {
+        newItems[index].description = selectedMedicine.name;
+        newItems[index].amount = selectedMedicine.sellingPrice;
+        newItems[index].total = newItems[index].quantity * selectedMedicine.sellingPrice;
+      }
     }
     
     // Calculate total
@@ -282,12 +297,17 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     }
   };
 
-  const getTypeCategories = (type: string) => {
+  const getTypeCategories = (type: string): (string | { value: string; label: string })[] => {
     switch (type) {
       case 'Consultation':
         return ['New Client', 'Follow-up', 'Emergency'];
       case 'Medicine':
-        return ['A_Drops_30', 'C_Drops_50', 'N_Lehyam_500', 'Other'];
+        // Return available medicines from inventory
+        const availableMedicines = getAvailableMedicines();
+        return availableMedicines.map(med => ({
+          value: med.id,
+          label: `${med.name} (₹${med.sellingPrice}) - Stock: ${med.stock} ${med.unit}`
+        }));
       case 'Procedure':
         return ['Panchatilyam', 'Massage', 'Therapy', 'Other'];
       case 'Discount':
@@ -302,6 +322,15 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       return Math.abs(amount).toString();
     }
     return amount.toString();
+  };
+
+  const getCategoryDisplayValue = (type: string, category: string) => {
+    if (type === 'Medicine' && category) {
+      const availableMedicines = getAvailableMedicines();
+      const selectedMedicine = availableMedicines.find(med => med.id === category);
+      return selectedMedicine ? selectedMedicine.name : category;
+    }
+    return category;
   };
 
   return (
@@ -323,6 +352,22 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {inventoryLoading && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-800">Loading inventory data...</p>
               </div>
             </div>
           </div>
@@ -394,14 +439,26 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         disabled={Boolean(editId && item.type === 'Consultation')}
                       >
                         <SelectTrigger className={`w-full text-gray-700 bg-white ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}>
-                          <SelectValue placeholder="Category" />
+                          <SelectValue placeholder="Category">
+                            {getCategoryDisplayValue(item.type, item.category)}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="text-gray-700 bg-white">
-                          {getTypeCategories(item.type).map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
+                          {getTypeCategories(item.type).map((category: string | { value: string; label: string }) => {
+                            if (typeof category === 'string') {
+                              return (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              );
+                            } else {
+                              return (
+                                <SelectItem key={category.value} value={category.value}>
+                                  {category.label}
+                                </SelectItem>
+                              );
+                            }
+                          })}
                         </SelectContent>
                       </Select>
                     </td>

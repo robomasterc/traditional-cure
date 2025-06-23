@@ -19,6 +19,10 @@ export function useTabNavigation() {
         '/cash/transactions/income': () => import('@/app/cash/transactions/income/page'),
         '/cash/transactions/expense': () => import('@/app/cash/transactions/expense/page'),
         '/admin/financial': () => import('@/app/admin/financial/page'),
+        '/stock/dashboard': () => import('@/app/stock/dashboard/page'),
+        '/stock/inventory/all': () => import('@/app/stock/inventory/all/page'),
+        '/stock/inventory/add': () => import('@/app/stock/inventory/add/page'),
+        '/stock/alerts/low-stock': () => import('@/app/stock/alerts/low-stock/page'),
       };
 
       const importFn = componentMap[path];

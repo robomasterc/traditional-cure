@@ -182,6 +182,10 @@ export class GoogleSheetsService {
     }));
   }
 
+  async getInventory(): Promise<InventoryItem[]> {
+    return this.getInventoryItems();
+  }
+
   async getStaff(): Promise<Staff[]> {
     const rows = await this.getRange('Staff!A2:J');
     return rows.map(row => ({
