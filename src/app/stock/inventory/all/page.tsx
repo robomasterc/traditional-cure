@@ -123,7 +123,7 @@ export default function AllInventoryPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 text-gray-700">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -162,10 +162,10 @@ export default function AllInventoryPage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="text-gray-700 bg-white">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="text-gray-700 bg-white">
                   <SelectItem value="all">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>
@@ -179,10 +179,10 @@ export default function AllInventoryPage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Stock Status</label>
               <Select value={stockFilter} onValueChange={setStockFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="text-gray-700 bg-white">
                   <SelectValue placeholder="All stock levels" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="text-gray-700 bg-white">
                   <SelectItem value="all">All Stock Levels</SelectItem>
                   <SelectItem value="normal">Normal Stock</SelectItem>
                   <SelectItem value="low">Low Stock</SelectItem>
@@ -235,7 +235,7 @@ export default function AllInventoryPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize">
+                      <Badge variant="outline" className="capitalize text-gray-700">
                         {item.category}
                       </Badge>
                     </TableCell>

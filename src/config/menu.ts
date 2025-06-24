@@ -199,7 +199,7 @@ export const roleBasedMenus: RoleMenu[] = [
       // },
       {
         id: "financial",
-        label: "Financial Management",
+        label: "Financials",
         icon: DollarSign,
         path: "/admin/financial",
         description: "Complete financial oversight and reporting"

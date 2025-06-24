@@ -34,7 +34,6 @@ interface InventoryFormData {
   reorderLevel: number;
   batchNumber: string;
   expiryDate: string;
-  description?: string;
 }
 
 export default function AddInventoryItemPage() {
@@ -50,9 +49,9 @@ export default function AddInventoryItemPage() {
     supplierId: '',
     reorderLevel: 0,
     batchNumber: '',
-    expiryDate: '',
-    description: ''
+    expiryDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const categories = [
     { value: 'Herb', label: 'Herb' },
@@ -73,10 +72,23 @@ export default function AddInventoryItemPage() {
   ];
 
   const handleInputChange = (field: keyof InventoryFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      // Default selling price to 3x cost price if costPrice changes and sellingPrice is 0 or less
+      if (field === 'costPrice') {
+        const cost = Number(value);
+        const shouldUpdateSellingPrice = prev.sellingPrice <= 0 || prev.sellingPrice === prev.costPrice * 3;
+        return {
+          ...prev,
+          costPrice: cost,
+          sellingPrice: shouldUpdateSellingPrice ? cost * 3 : prev.sellingPrice,
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
+    setErrors(prev => ({ ...prev, [field]: '' })); // Clear error on change
   };
 
   const generateBatchNumber = () => {
@@ -88,21 +100,20 @@ export default function AddInventoryItemPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.category) newErrors.category = 'Category is required';
+    if (!formData.unit) newErrors.unit = 'Unit is required';
+    if (formData.costPrice <= 0) newErrors.costPrice = 'Cost price must be greater than zero';
+    if (formData.sellingPrice <= 0) newErrors.sellingPrice = 'Selling price must be greater than zero';
+    if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Validate required fields
-      if (!formData.name || !formData.category || !formData.unit) {
-        throw new Error('Please fill in all required fields');
-      }
-
-      if (formData.costPrice <= 0 || formData.sellingPrice <= 0) {
-        throw new Error('Prices must be greater than zero');
-      }
-
-      if (formData.stock < 0) {
-        throw new Error('Stock cannot be negative');
-      }
-
       // Generate ID
       const id = `INV${Date.now()}`;
 
@@ -125,7 +136,18 @@ export default function AddInventoryItemPage() {
       }
 
       toast.success('Inventory item created successfully');
-      router.push('/stock/inventory/all');
+      setFormData({
+        name: '',
+        category: '',
+        stock: 0,
+        unit: '',
+        costPrice: 0,
+        sellingPrice: 0,
+        supplierId: '',
+        expiryDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        reorderLevel: 0,
+        batchNumber: ''
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error(errorMessage);
@@ -136,17 +158,9 @@ export default function AddInventoryItemPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 text-gray-700">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.back()}
-          className="flex items-center"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+      <div className="flex items-center space-x-4">        
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Add New Inventory Item</h1>
           <p className="text-gray-600 mt-1">Create a new inventory item with all necessary details</p>
@@ -169,10 +183,12 @@ export default function AddInventoryItemPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange('name', (e.target as HTMLInputElement).value)}
                   placeholder="Enter item name"
                   required
+                  className={errors.name ? 'border-red-500' : ''}
                 />
+                {errors.name && <div className="text-red-600 text-xs mt-1">{errors.name}</div>}
               </div>
 
               <div>
@@ -182,10 +198,10 @@ export default function AddInventoryItemPage() {
                   onValueChange={(value) => handleInputChange('category', value)}
                   required
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={`text-gray-700 bg-white ${errors.category ? 'border-red-500' : ''}`}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="text-gray-700 bg-white">
                     {categories.map(category => (
                       <SelectItem key={category.value} value={category.value}>
                         {category.label}
@@ -193,17 +209,7 @@ export default function AddInventoryItemPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Enter item description"
-                  rows={3}
-                />
+                {errors.category && <div className="text-red-600 text-xs mt-1">{errors.category}</div>}
               </div>
             </CardContent>
           </Card>
@@ -221,11 +227,13 @@ export default function AddInventoryItemPage() {
                     id="stock"
                     type="number"
                     value={formData.stock}
-                    onChange={(e) => handleInputChange('stock', Number(e.target.value))}
+                    onChange={(e) => handleInputChange('stock', Number((e.target as HTMLInputElement).value))}
                     placeholder="0"
                     min="0"
                     step="0.01"
+                    className={errors.stock ? 'border-red-500' : ''}
                   />
+                  {errors.stock && <div className="text-red-600 text-xs mt-1">{errors.stock}</div>}
                 </div>
 
                 <div>
@@ -235,10 +243,10 @@ export default function AddInventoryItemPage() {
                     onValueChange={(value) => handleInputChange('unit', value)}
                     required
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={`text-gray-700 bg-white ${errors.unit ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="text-gray-700 bg-white">
                       {units.map(unit => (
                         <SelectItem key={unit.value} value={unit.value}>
                           {unit.label}
@@ -246,6 +254,7 @@ export default function AddInventoryItemPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.unit && <div className="text-red-600 text-xs mt-1">{errors.unit}</div>}
                 </div>
               </div>
 
@@ -255,7 +264,7 @@ export default function AddInventoryItemPage() {
                   id="reorderLevel"
                   type="number"
                   value={formData.reorderLevel}
-                  onChange={(e) => handleInputChange('reorderLevel', Number(e.target.value))}
+                  onChange={(e) => handleInputChange('reorderLevel', Number((e.target as HTMLInputElement).value))}
                   placeholder="Minimum stock level"
                   min="0"
                   step="0.01"
@@ -268,7 +277,7 @@ export default function AddInventoryItemPage() {
                   <Input
                     id="batchNumber"
                     value={formData.batchNumber}
-                    onChange={(e) => handleInputChange('batchNumber', e.target.value)}
+                    onChange={(e) => handleInputChange('batchNumber', (e.target as HTMLInputElement).value)}
                     placeholder="Enter batch number"
                   />
                   <Button 
@@ -295,12 +304,14 @@ export default function AddInventoryItemPage() {
                   id="costPrice"
                   type="number"
                   value={formData.costPrice}
-                  onChange={(e) => handleInputChange('costPrice', Number(e.target.value))}
+                  onChange={(e) => handleInputChange('costPrice', Number((e.target as HTMLInputElement).value))}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
                   required
+                  className={errors.costPrice ? 'border-red-500' : ''}
                 />
+                {errors.costPrice && <div className="text-red-600 text-xs mt-1">{errors.costPrice}</div>}
               </div>
 
               <div>
@@ -309,12 +320,14 @@ export default function AddInventoryItemPage() {
                   id="sellingPrice"
                   type="number"
                   value={formData.sellingPrice}
-                  onChange={(e) => handleInputChange('sellingPrice', Number(e.target.value))}
+                  onChange={(e) => handleInputChange('sellingPrice', Number((e.target as HTMLInputElement).value))}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
                   required
+                  className={errors.sellingPrice ? 'border-red-500' : ''}
                 />
+                {errors.sellingPrice && <div className="text-red-600 text-xs mt-1">{errors.sellingPrice}</div>}
               </div>
 
               {formData.costPrice > 0 && formData.sellingPrice > 0 && (
@@ -339,7 +352,7 @@ export default function AddInventoryItemPage() {
                 <Input
                   id="supplierId"
                   value={formData.supplierId}
-                  onChange={(e) => handleInputChange('supplierId', e.target.value)}
+                  onChange={(e) => handleInputChange('supplierId', (e.target as HTMLInputElement).value)}
                   placeholder="Enter supplier ID"
                 />
               </div>
@@ -350,7 +363,7 @@ export default function AddInventoryItemPage() {
                   id="expiryDate"
                   type="date"
                   value={formData.expiryDate}
-                  onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                  onChange={(e) => handleInputChange('expiryDate', (e.target as HTMLInputElement).value)}
                 />
               </div>
 
@@ -373,7 +386,7 @@ export default function AddInventoryItemPage() {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => router.back()}
+            onClick={() => window.close()}
           >
             Cancel
           </Button>

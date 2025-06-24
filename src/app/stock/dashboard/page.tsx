@@ -117,7 +117,7 @@ export default function StockDashboardPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 text-gray-700">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

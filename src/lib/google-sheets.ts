@@ -177,8 +177,9 @@ export class GoogleSheetsService {
       expiryDate: new Date(row[8]),
       reorderLevel: Number(row[9]),
       batchNumber: row[10],
-      createdAt: new Date(row[11]),
-      updatedAt: new Date(row[12])
+      description: row[11] || '',
+      createdAt: new Date(row[12]),
+      updatedAt: new Date(row[13])
     }));
   }
 
