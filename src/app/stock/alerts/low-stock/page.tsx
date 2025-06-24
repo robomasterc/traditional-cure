@@ -66,7 +66,7 @@ export default function LowStockAlertsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 text-gray-700">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -174,7 +174,7 @@ export default function LowStockAlertsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant="outline" className="capitalize text-gray-700">
                           {item.category}
                         </Badge>
                       </TableCell>

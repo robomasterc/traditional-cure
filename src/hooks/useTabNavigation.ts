@@ -22,7 +22,22 @@ export function useTabNavigation() {
         '/stock/dashboard': () => import('@/app/stock/dashboard/page'),
         '/stock/inventory/all': () => import('@/app/stock/inventory/all/page'),
         '/stock/inventory/add': () => import('@/app/stock/inventory/add/page'),
+        '/stock/inventory/adjustment': () => import('@/app/stock/inventory/adjustment/page'),
+        '/stock/inventory/movements': () => import('@/app/stock/inventory/movements/page'),
         '/stock/alerts/low-stock': () => import('@/app/stock/alerts/low-stock/page'),
+        '/stock/alerts/expiring': () => import('@/app/stock/alerts/expiring/page'),
+        '/stock/alerts/out-of-stock': () => import('@/app/stock/alerts/out-of-stock/page'),
+        '/stock/alerts/expired': () => import('@/app/stock/alerts/expired/page'),
+        '/stock/procurement/orders': () => import('@/app/stock/procurement/orders/page'),
+        '/stock/procurement/tracking': () => import('@/app/stock/procurement/tracking/page'),
+        '/stock/procurement/receiving': () => import('@/app/stock/procurement/receiving/page'),         
+        '/stock/procurement/analytics': () => import('@/app/stock/procurement/analytics/page'),   
+        '/stock/suppliers/list': () => import('@/app/stock/suppliers/list/page'),
+        '/stock/suppliers/add': () => import('@/app/stock/suppliers/add/page'),
+        '/stock/reports/stock': () => import('@/app/stock/reports/stock/page'),
+        '/stock/reports/valuation': () => import('@/app/stock/reports/valuation/page'),
+        '/stock/reports/movement': () => import('@/app/stock/reports/movement/page'),
+        '/stock/reports/abc': () => import('@/app/stock/reports/abc/page'),
       };
 
       const importFn = componentMap[path];

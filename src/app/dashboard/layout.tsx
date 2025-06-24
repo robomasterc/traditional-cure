@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { TabProvider } from "@/contexts/TabContext";
 import { TabBar } from "@/components/ui/tab-bar";
 import { TabContent } from "@/components/ui/tab-content";
+import { TabNotification } from "@/components/ui/tab-notification";
 import { UserRole } from "@/types/auth";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
@@ -50,6 +51,7 @@ export default function DashboardLayout({
           </div>
         </main>
       </div>
+      <TabNotification />
     </TabProvider>
   );
 } 

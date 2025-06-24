@@ -935,60 +935,60 @@ export const roleBasedMenus: RoleMenu[] = [
             icon: UserPlus,
             path: "/stock/suppliers/add",
             description: "Register new suppliers"
-          },
-          {
-            id: "supplier-performance",
-            label: "Performance",
-            icon: Target,
-            path: "/stock/suppliers/performance",
-            description: "Evaluate supplier performance"
-          },
-          {
-            id: "price-comparison",
-            label: "Price Comparison",
-            icon: BarChart2,
-            path: "/stock/suppliers/pricing",
-            description: "Compare supplier pricing"
           }
+          // {
+          //   id: "supplier-performance",
+          //   label: "Performance",
+          //   icon: Target,
+          //   path: "/stock/suppliers/performance",
+          //   description: "Evaluate supplier performance"
+          // },
+          // {
+          //   id: "price-comparison",
+          //   label: "Price Comparison",
+          //   icon: BarChart2,
+          //   path: "/stock/suppliers/pricing",
+          //   description: "Compare supplier pricing"
+          // }
         ]
       },
-      {
-        id: "quality",
-        label: "Quality Control",
-        icon: Shield,
-        path: "/stock/quality",
-        description: "Quality assurance and testing",
-        subItems: [
-          {
-            id: "incoming-inspection",
-            label: "Incoming Inspection",
-            icon: Search,
-            path: "/stock/quality/inspection",
-            description: "Quality check incoming goods"
-          },
-          {
-            id: "quality-certificates",
-            label: "Certificates",
-            icon: Award,
-            path: "/stock/quality/certificates",
-            description: "Manage quality certificates"
-          },
-          {
-            id: "batch-testing",
-            label: "Batch Testing",
-            icon: TestTube,
-            path: "/stock/quality/testing",
-            description: "Track batch testing results"
-          },
-          {
-            id: "quality-reports",
-            label: "Quality Reports",
-            icon: ClipboardCheck,
-            path: "/stock/quality/reports",
-            description: "Generate quality reports"
-          }
-        ]
-      },
+      // {
+      //   id: "quality",
+      //   label: "Quality Control",
+      //   icon: Shield,
+      //   path: "/stock/quality",
+      //   description: "Quality assurance and testing",
+      //   subItems: [
+      //     {
+      //       id: "incoming-inspection",
+      //       label: "Incoming Inspection",
+      //       icon: Search,
+      //       path: "/stock/quality/inspection",
+      //       description: "Quality check incoming goods"
+      //     },
+      //     {
+      //       id: "quality-certificates",
+      //       label: "Certificates",
+      //       icon: Award,
+      //       path: "/stock/quality/certificates",
+      //       description: "Manage quality certificates"
+      //     },
+      //     {
+      //       id: "batch-testing",
+      //       label: "Batch Testing",
+      //       icon: TestTube,
+      //       path: "/stock/quality/testing",
+      //       description: "Track batch testing results"
+      //     },
+      //     {
+      //       id: "quality-reports",
+      //       label: "Quality Reports",
+      //       icon: ClipboardCheck,
+      //       path: "/stock/quality/reports",
+      //       description: "Generate quality reports"
+      //     }
+      //   ]
+      // },
       {
         id: "reports",
         label: "Inventory Reports",
