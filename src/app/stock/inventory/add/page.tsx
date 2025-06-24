@@ -36,7 +36,13 @@ interface InventoryFormData {
   expiryDate: string;
 }
 
-export default function AddInventoryItemPage() {
+interface AddInventoryPageProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  isDialog?: boolean;
+}
+
+export default function AddInventoryPage({ onSuccess, onCancel, isDialog = false }: AddInventoryPageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<InventoryFormData>({
@@ -148,6 +154,9 @@ export default function AddInventoryItemPage() {
         reorderLevel: 0,
         batchNumber: ''
       });
+      if (onSuccess && isDialog) {
+        onSuccess();
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error(errorMessage);
@@ -383,13 +392,19 @@ export default function AddInventoryItemPage() {
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
+          {isDialog && (
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => window.close()}
-          >
-            Cancel
-          </Button>
+            onClick={() => {
+              if (onCancel) {
+                onCancel();
+              }
+            }}
+            >
+              Cancel
+            </Button>
+          )}
           <Button type="submit" disabled={loading}>
             {loading ? (
               <>

@@ -21,6 +21,13 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { 
   Search, 
   Filter, 
   Plus, 
@@ -33,12 +40,14 @@ import {
   Package
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
+import AddInventoryPage from '../add/page';
 
 export default function AllInventoryPage() {
   const { inventory, loading, error, refetch } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Filter inventory based on search and filters
   const filteredInventory = useMemo(() => {
@@ -130,10 +139,31 @@ export default function AllInventoryPage() {
           <h1 className="text-3xl font-bold text-gray-900">All Inventory Items</h1>
           <p className="text-gray-600 mt-1">Manage and monitor all inventory items</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Item
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Item
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Inventory Item</DialogTitle>
+            </DialogHeader>
+            <div className="p-0">
+              <AddInventoryPage 
+                isDialog={true}
+                onSuccess={() => {
+                  setIsAddDialogOpen(false);
+                  refetch();
+                }}
+                onCancel={() => {
+                  setIsAddDialogOpen(false);
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
