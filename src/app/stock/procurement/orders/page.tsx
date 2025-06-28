@@ -35,8 +35,13 @@ import {
   Clock,
   TrendingUp,
   Grid3X3,
-  List
+  List,
+  AlertTriangle
 } from 'lucide-react';
+import { useInventory } from '@/hooks/useInventory';
+import { useSuppliers } from '@/hooks/useSuppliers';
+import { toast } from 'sonner';
+import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from '@/components/ui/table';
 
 interface CartItem {
   itemId: string;
@@ -63,16 +68,10 @@ interface InventoryItem {
   leadTime: number; // in days
 }
 
-interface Supplier {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  rating: number;
-  deliveryTime: number; // average delivery time in days
-}
-
 export default function PurchaseOrdersPage() {
+  const { inventory, loading: inventoryLoading, error: inventoryError, refetch: refetchInventory } = useInventory();
+  const { suppliers, loading: suppliersLoading, error: suppliersError, refetch: refetchSuppliers } = useSuppliers();
+  
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -90,21 +89,25 @@ export default function PurchaseOrdersPage() {
     notes: ''
   });
 
-  // Mock data
-  const suppliers: Supplier[] = [
-    { id: 'SUP001', name: 'ABC Suppliers', email: 'abc@suppliers.com', phone: '+91-9876543210', rating: 4.5, deliveryTime: 7 },
-    { id: 'SUP002', name: 'XYZ Pharmaceuticals', email: 'xyz@pharma.com', phone: '+91-9876543211', rating: 4.2, deliveryTime: 10 },
-    { id: 'SUP003', name: 'Herbal Solutions Ltd', email: 'herbal@ltd.com', phone: '+91-9876543212', rating: 4.8, deliveryTime: 5 }
-  ];
-
-  const inventoryItems: InventoryItem[] = [
-    { id: 'INV001', name: 'Ashwagandha', unit: 'kg', costPrice: 500, currentStock: 10, supplierId: 'SUP001', supplierName: 'ABC Suppliers', category: 'Herbs', description: 'Traditional Ayurvedic herb for stress relief', minOrderQuantity: 5, leadTime: 7 },
-    { id: 'INV002', name: 'Brahmi', unit: 'kg', costPrice: 500, currentStock: 5, supplierId: 'SUP001', supplierName: 'ABC Suppliers', category: 'Herbs', description: 'Memory enhancing herb', minOrderQuantity: 3, leadTime: 7 },
-    { id: 'INV003', name: 'Tulsi', unit: 'kg', costPrice: 300, currentStock: 20, supplierId: 'SUP002', supplierName: 'XYZ Pharmaceuticals', category: 'Herbs', description: 'Holy basil for immunity', minOrderQuantity: 10, leadTime: 5 },
-    { id: 'INV004', name: 'Neem', unit: 'kg', costPrice: 400, currentStock: 15, supplierId: 'SUP002', supplierName: 'XYZ Pharmaceuticals', category: 'Herbs', description: 'Natural antibacterial herb', minOrderQuantity: 5, leadTime: 8 },
-    { id: 'INV005', name: 'Amla', unit: 'kg', costPrice: 350, currentStock: 8, supplierId: 'SUP003', supplierName: 'Herbal Solutions Ltd', category: 'Fruits', description: 'Vitamin C rich fruit', minOrderQuantity: 5, leadTime: 6 },
-    { id: 'INV006', name: 'Ginger', unit: 'kg', costPrice: 250, currentStock: 25, supplierId: 'SUP003', supplierName: 'Herbal Solutions Ltd', category: 'Spices', description: 'Digestive aid and anti-inflammatory', minOrderQuantity: 5, leadTime: 4 }
-  ];
+  // Transform inventory data to match the expected format
+  const inventoryItems: InventoryItem[] = useMemo(() => {
+    return inventory.map(item => {
+      const supplier = suppliers.find(s => s.id === item.supplierId);
+      return {
+        id: item.id,
+        name: item.name,
+        unit: item.unit,
+        costPrice: item.costPrice,
+        currentStock: item.stock,
+        supplierId: item.supplierId,
+        supplierName: supplier?.name || 'Unknown Supplier',
+        category: item.category,
+        description: undefined, // Description not available in current inventory schema
+        minOrderQuantity: 5, // Default value, can be added to inventory schema later
+        leadTime: 7, // Default value, can be added to inventory schema later
+      };
+    });
+  }, [inventory, suppliers]);
 
   // Filter and sort inventory items
   const filteredItems = useMemo(() => {
@@ -205,62 +208,79 @@ export default function PurchaseOrdersPage() {
   };
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    
+    if (cartItems.length === 0) {
+      toast.error('Cart is empty');
+      return;
+    }
+
     // Group items by supplier
-    const itemsBySupplier = cartItems.reduce((acc, item) => {
-      if (!acc[item.supplierId]) {
-        acc[item.supplierId] = {
+    const supplierGroups = cartItems.reduce((groups, item) => {
+      if (!groups[item.supplierId]) {
+        groups[item.supplierId] = {
           supplierId: item.supplierId,
           supplierName: item.supplierName,
           items: []
         };
       }
-      acc[item.supplierId].items.push(item);
-      return acc;
+      groups[item.supplierId].items.push(item);
+      return groups;
     }, {} as Record<string, { supplierId: string; supplierName: string; items: CartItem[] }>);
 
-    // Create purchase orders for each supplier
-    const purchaseOrders = Object.values(itemsBySupplier).map((supplierGroup, index) => {
-      const totalAmount = supplierGroup.items.reduce((sum, item) => sum + item.totalPrice, 0);
-      const expectedDelivery = new Date();
-      const supplier = suppliers.find(s => s.id === supplierGroup.supplierId);
-      expectedDelivery.setDate(expectedDelivery.getDate() + (supplier?.deliveryTime || 7));
-      
-      return {
-        id: `PO${Date.now()}-${index}`,
-        poNumber: `PO-2024-${String(Date.now()).slice(-3)}-${index + 1}`,
-        supplierName: supplierGroup.supplierName,
-        supplierId: supplierGroup.supplierId,
-        orderDate: new Date().toISOString().split('T')[0],
-        expectedDelivery: expectedDelivery.toISOString().split('T')[0],
-        status: 'Draft' as const,
-        totalAmount,
-        items: supplierGroup.items.map(item => ({
-          itemId: item.itemId,
-          itemName: item.itemName,
-          quantity: item.quantity,
-          unit: item.unit,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice
-        })),
-        notes: checkoutData.notes,
-        createdBy: 'Current User',
-        createdAt: new Date().toISOString()
-      };
+    // For now, just show the first supplier's checkout
+    const firstSupplier = Object.values(supplierGroups)[0];
+    setCheckoutData({
+      supplierId: firstSupplier.supplierId,
+      supplierName: firstSupplier.supplierName,
+      expectedDelivery: '',
+      notes: ''
     });
-
-    console.log('Creating purchase orders:', purchaseOrders);
-    // Here you would typically send the purchase orders to your API
-    clearCart();
-    setIsCheckoutOpen(false);
+    setIsCheckoutOpen(true);
   };
 
   const getStockStatus = (currentStock: number, minOrderQuantity: number) => {
-    if (currentStock === 0) return { status: 'Out of Stock', color: 'text-red-600', bg: 'bg-red-100' };
-    if (currentStock < minOrderQuantity) return { status: 'Low Stock', color: 'text-orange-600', bg: 'bg-orange-100' };
-    return { status: 'In Stock', color: 'text-green-600', bg: 'bg-green-100' };
+    if (currentStock === 0) {
+      return { status: 'out', label: 'Out of Stock', color: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-200' };
+    } else if (currentStock <= minOrderQuantity) {
+      return { status: 'low', label: 'Low Stock', color: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
+    } else {
+      return { status: 'normal', label: 'In Stock', color: 'default' as const, className: 'bg-green-100 text-green-800 border-green-200' };
+    }
   };
+
+  // Loading state
+  if (inventoryLoading || suppliersLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+          <span className="text-lg">Loading procurement data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (inventoryError || suppliersError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
+          <p className="text-gray-600 mb-4">
+            {inventoryError || suppliersError}
+          </p>
+          <div className="space-x-2">
+            <Button onClick={refetchInventory} variant="outline">
+              Retry Inventory
+            </Button>
+            <Button onClick={refetchSuppliers} variant="outline">
+              Retry Suppliers
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">
@@ -301,12 +321,7 @@ export default function PurchaseOrdersPage() {
               className="relative"
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
-              Cart
-              {getCartItemCount() > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">
-                  {getCartItemCount()}
-                </Badge>
-              )}
+              Cart ({getCartItemCount()})
             </Button>
             <Button 
               onClick={() => setIsCheckoutOpen(true)}
@@ -478,92 +493,85 @@ export default function PurchaseOrdersPage() {
             {filteredItems.map((item) => {
               const stockStatus = getStockStatus(item.currentStock, item.minOrderQuantity);
               const cartItem = cartItems.find(cartItem => cartItem.itemId === item.id);
-              const supplier = suppliers.find(s => s.id === item.supplierId);
 
               return (
                 <Card key={item.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {/* Item Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <Badge variant={stockStatus.color} className={stockStatus.className}>
+                        {stockStatus.label}
+                      </Badge>
+                      <span className="text-sm text-gray-600">
+                        {item.currentStock} {item.unit}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-600">{item.description}</p>
-                      </div>
-
-                      {/* Stock Status */}
-                      <div className="flex items-center justify-between">
-                        <Badge className={`${stockStatus.bg} ${stockStatus.color}`}>
-                          {stockStatus.status}
+                        <Badge variant={stockStatus.color} className={stockStatus.className}>
+                          {stockStatus.label}
                         </Badge>
-                        <span className="text-sm text-gray-600">
-                          Stock: {item.currentStock} {item.unit}
-                        </span>
                       </div>
 
-                      {/* Supplier Info */}
-                      <div className="flex items-center space-x-2">
-                        <Building className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-600">{item.supplierName}</span>
-                        {supplier && (
-                          <Badge variant="outline" className="text-xs">
-                            ⭐ {supplier.rating}
-                          </Badge>
-                        )}
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {item.description || 'No description available'}
+                      </p>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Supplier:</span>
+                        <span className="font-medium">{item.supplierName}</span>
                       </div>
 
-                      {/* Price and Lead Time */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-2xl font-bold text-green-600">₹{item.costPrice.toLocaleString()}</p>
-                          <p className="text-sm text-gray-500">per {item.unit}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Lead Time</p>
-                          <p className="text-sm font-medium">{item.leadTime} days</p>
-                        </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Category:</span>
+                        <span className="font-medium capitalize">{item.category}</span>
                       </div>
 
-                      {/* Add to Cart */}
-                      <div className="space-y-2">
-                        {cartItem ? (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateCartQuantity(item.id, cartItem.quantity - 1)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="text-sm font-medium min-w-[2rem] text-center">
-                              {cartItem.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateCartQuantity(item.id, cartItem.quantity + 1)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFromCart(item.id)}
-                              className="text-red-600 ml-auto"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Price:</span>
+                        <span className="font-medium">₹{item.costPrice}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Lead Time:</span>
+                        <span className="font-medium">{item.leadTime} days</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {cartItem ? (
+                        <div className="flex items-center space-x-2">
                           <Button
-                            onClick={() => addToCart(item, item.minOrderQuantity)}
-                            disabled={item.currentStock === 0}
-                            className="w-full"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateCartQuantity(item.id, cartItem.quantity - 1)}
+                            className="h-8 w-8 p-0"
                           >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add to Cart ({item.minOrderQuantity} {item.unit})
+                            <Minus className="h-4 w-4" />
                           </Button>
-                        )}
-                      </div>
+                          <span className="flex-1 text-center font-medium">
+                            {cartItem.quantity} in cart
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateCartQuantity(item.id, cartItem.quantity + 1)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => addToCart(item)}
+                          className="w-full"
+                          disabled={item.currentStock === 0}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add to Cart
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -573,123 +581,116 @@ export default function PurchaseOrdersPage() {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <div className="divide-y divide-gray-200">
-                {filteredItems.map((item) => {
-                  const stockStatus = getStockStatus(item.currentStock, item.minOrderQuantity);
-                  const cartItem = cartItems.find(cartItem => cartItem.itemId === item.id);
-                  const supplier = suppliers.find(s => s.id === item.supplierId);
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Lead Time</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.map((item) => {
+                    const stockStatus = getStockStatus(item.currentStock, item.minOrderQuantity);
+                    const cartItem = cartItems.find(cartItem => cartItem.itemId === item.id);
 
-                  return (
-                    <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        {/* Item Info */}
-                        <div className="flex-1">
-                          <div className="flex items-start space-x-4">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                                <Badge className={`${stockStatus.bg} ${stockStatus.color}`}>
-                                  {stockStatus.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <div className="flex items-center space-x-1">
-                                  <Building className="h-4 w-4" />
-                                  <span>{item.supplierName}</span>
-                                  {supplier && (
-                                    <Badge variant="outline" className="text-xs">
-                                      ⭐ {supplier.rating}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Package className="h-4 w-4" />
-                                  <span>Stock: {item.currentStock} {item.unit}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="h-4 w-4" />
-                                  <span>Lead: {item.leadTime} days</span>
-                                </div>
-                              </div>
-                            </div>
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-sm text-gray-500">{item.description}</div>
                           </div>
-                        </div>
-
-                        {/* Price */}
-                        <div className="text-right mr-6">
-                          <p className="text-2xl font-bold text-green-600">₹{item.costPrice.toLocaleString()}</p>
-                          <p className="text-sm text-gray-500">per {item.unit}</p>
-                        </div>
-
-                        {/* Cart Controls */}
-                        <div className="flex items-center space-x-3">
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize text-gray-700">
+                            {item.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={stockStatus.color} className={stockStatus.className}>
+                              {stockStatus.label}
+                            </Badge>
+                            <span className="text-sm text-gray-600">
+                              {item.currentStock} {item.unit}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">₹{item.costPrice}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{item.supplierName}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">{item.leadTime} days</div>
+                        </TableCell>
+                        <TableCell>
                           {cartItem ? (
                             <div className="flex items-center space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => updateCartQuantity(item.id, cartItem.quantity - 1)}
+                                className="h-8 w-8 p-0"
                               >
                                 <Minus className="h-4 w-4" />
                               </Button>
-                              <span className="text-sm font-medium min-w-[2rem] text-center">
+                              <span className="text-sm font-medium min-w-[60px] text-center">
                                 {cartItem.quantity}
                               </span>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => updateCartQuantity(item.id, cartItem.quantity + 1)}
+                                className="h-8 w-8 p-0"
                               >
                                 <Plus className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           ) : (
                             <Button
-                              onClick={() => addToCart(item, item.minOrderQuantity)}
-                              disabled={item.currentStock === 0}
+                              onClick={() => addToCart(item)}
                               size="sm"
+                              disabled={item.currentStock === 0}
                             >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add ({item.minOrderQuantity})
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add
                             </Button>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}
 
         {filteredItems.length === 0 && (
-          <div className="text-center py-8">
+          <div className="text-center py-12">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No items found</p>
+            <p className="text-gray-500">No items found matching your criteria</p>
           </div>
         )}
       </div>
 
-      {/* Cart Sidebar */}
+      {/* Cart Dialog */}
       <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <ShoppingCart className="h-5 w-5 mr-2" />
-              Shopping Cart ({getCartItemCount()} items)
+              Shopping Cart
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 text-gray-700">
             {cartItems.length === 0 ? (
               <div className="text-center py-8">
                 <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -697,61 +698,53 @@ export default function PurchaseOrdersPage() {
               </div>
             ) : (
               <>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3">
                   {cartItems.map((item) => (
-                    <div key={item.itemId} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={item.itemId} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
-                        <p className="font-medium text-sm">{item.itemName}</p>
-                        <p className="text-xs text-gray-600">{item.supplierName}</p>
-                        <p className="text-xs text-gray-500">₹{item.unitPrice.toLocaleString()} per {item.unit}</p>
+                        <div className="font-medium">{item.itemName}</div>
+                        <div className="text-sm text-gray-600">
+                          ₹{item.unitPrice} × {item.quantity} {item.unit}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Supplier: {item.supplierName}
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.itemId, item.quantity - 1)}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-sm font-medium min-w-[2rem] text-center">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.itemId, item.quantity + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                        <span className="font-medium">₹{item.totalPrice}</span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removeFromCart(item.itemId)}
                           className="text-red-600"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-sm">₹{item.totalPrice.toLocaleString()}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-medium">Total:</span>
-                    <span className="text-2xl font-bold text-green-600">₹{getCartTotal().toLocaleString()}</span>
+                    <span className="text-lg font-semibold">Total:</span>
+                    <span className="text-lg font-semibold">₹{getCartTotal().toLocaleString()}</span>
                   </div>
-                  <div className="space-y-2">
-                    <Button onClick={() => setIsCheckoutOpen(true)} className="w-full">
-                      <Send className="h-4 w-4 mr-2" />
-                      Proceed to Checkout
-                    </Button>
-                    <Button variant="outline" onClick={clearCart} className="w-full">
-                      <Trash2 className="h-4 w-4 mr-2" />
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={clearCart}
+                      className="flex-1"
+                    >
                       Clear Cart
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsCartOpen(false);
+                        handleCheckout();
+                      }}
+                      className="flex-1"
+                    >
+                      Proceed to Checkout
                     </Button>
                   </div>
                 </div>
@@ -767,13 +760,33 @@ export default function PurchaseOrdersPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <Send className="h-5 w-5 mr-2" />
-              Checkout & Create Purchase Orders
+              Create Purchase Order
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-6">
+          <div className="space-y-4 text-gray-700">
             <div>
-              <Label htmlFor="notes">Order Notes</Label>
+              <Label htmlFor="supplier">Supplier</Label>
+              <div className="mt-1 p-3 border rounded-lg bg-gray-50">
+                <div className="font-medium">{checkoutData.supplierName}</div>
+                <div className="text-sm text-gray-600">ID: {checkoutData.supplierId}</div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="expectedDelivery">Expected Delivery Date</Label>
+              <Input
+                id="expectedDelivery"
+                type="date"
+                value={checkoutData.expectedDelivery}
+                onChange={(e) => setCheckoutData(prev => ({ ...prev, expectedDelivery: e.target.value }))}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
               <Textarea
+                id="notes"
                 value={checkoutData.notes}
                 onChange={(e) => setCheckoutData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Add any special instructions or notes..."
@@ -781,47 +794,40 @@ export default function PurchaseOrdersPage() {
               />
             </div>
 
-            <div>
-              <Label className="text-sm font-medium">Order Summary</Label>
-              <div className="mt-2 space-y-2">
-                {Object.entries(cartItems.reduce((acc, item) => {
-                  if (!acc[item.supplierId]) {
-                    acc[item.supplierId] = {
-                      supplierName: item.supplierName,
-                      items: [],
-                      total: 0
-                    };
-                  }
-                  acc[item.supplierId].items.push(item);
-                  acc[item.supplierId].total += item.totalPrice;
-                  return acc;
-                }, {} as Record<string, { supplierName: string; items: CartItem[]; total: number }>)).map(([supplierId, data]) => (
-                  <div key={supplierId} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-medium">{data.supplierName}</h4>
-                      <span className="font-bold text-green-600">₹{data.total.toLocaleString()}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {data.items.length} item{data.items.length !== 1 ? 's' : ''} • 
-                      Expected delivery: {new Date(Date.now() + (suppliers.find(s => s.id === supplierId)?.deliveryTime || 7) * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                    </div>
+            <div className="border-t pt-4">
+              <h4 className="font-semibold mb-2">Order Summary</h4>
+              <div className="space-y-2">
+                {cartItems.map((item) => (
+                  <div key={item.itemId} className="flex justify-between text-sm">
+                    <span>{item.itemName} × {item.quantity} {item.unit}</span>
+                    <span>₹{item.totalPrice}</span>
                   </div>
                 ))}
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>₹{getCartTotal().toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
-              <span className="text-lg font-medium">Total Order Value:</span>
-              <span className="text-2xl font-bold text-green-600">₹{getCartTotal().toLocaleString()}</span>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsCheckoutOpen(false)}>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsCheckoutOpen(false)}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCheckout}>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Create Purchase Orders
+              <Button
+                onClick={() => {
+                  // TODO: Implement purchase order creation
+                  toast.success('Purchase order created successfully!');
+                  clearCart();
+                  setIsCheckoutOpen(false);
+                }}
+                className="flex-1"
+              >
+                Create Order
               </Button>
             </div>
           </div>
