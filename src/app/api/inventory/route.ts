@@ -77,8 +77,38 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validatedData = inventorySchema.parse(body);
 
-    const updatedItem = await sheetsService.updateRow(SHEET_NAMES.INVENTORY, Object.values(validatedData));
-    return NextResponse.json(updatedItem);
+    // Get all inventory items to find the row index
+    const items = await sheetsService.getInventory();
+    const itemIndex = items.findIndex(i => i.id === validatedData.id);
+
+    if (itemIndex === -1) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    }
+
+    // Convert to array format for Google Sheets (A2:M range)
+    // Based on SHEET_COLUMNS.INVENTORY structure
+    const rowData = [
+      validatedData.id,
+      validatedData.name,
+      validatedData.category,
+      validatedData.stock,
+      validatedData.unit,
+      validatedData.costPrice,
+      validatedData.sellingPrice,
+      validatedData.supplierId,
+      validatedData.expiryDate,
+      validatedData.reorderLevel,
+      validatedData.batchNumber,
+      validatedData.createdAt,
+      validatedData.updatedAt,
+    ];
+
+    // Update the specific row in Google Sheets
+    // Note: +2 because Google Sheets is 1-indexed and we have a header row
+    const range = `${SHEET_NAMES.INVENTORY}!A${itemIndex + 2}:M${itemIndex + 2}`;
+    await sheetsService.updateRow(range, rowData);
+
+    return NextResponse.json(validatedData);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });

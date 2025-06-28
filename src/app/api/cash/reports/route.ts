@@ -157,6 +157,5 @@ function generatePaymentAnalysis(transactions: Transaction[]) {
     acc[t.category] = (acc[t.category] || 0) + t.cash + t.upi;
     return acc;
   }, {} as Record<string, number>);
-
   return { categories };
 } 

@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { 
   Search, 
@@ -37,10 +38,15 @@ import {
   AlertTriangle,
   XCircle,
   Clock,
-  Package
+  Package,
+  Calendar,
+  DollarSign,
+  Hash,
+  Tag
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import AddInventoryPage from '../add/page';
+import { toast } from 'sonner';
 
 export default function AllInventoryPage() {
   const { inventory, loading, error, refetch } = useInventory();
@@ -48,6 +54,10 @@ export default function AllInventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Filter inventory based on search and filters
   const filteredInventory = useMemo(() => {
@@ -81,11 +91,11 @@ export default function AllInventoryPage() {
 
   const getStockStatus = (item: any) => {
     if (item.stock === 0) {
-      return { status: 'out', label: 'Out of Stock', color: 'destructive' as const };
+      return { status: 'out', label: 'Out of Stock', color: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-200' };
     } else if (item.stock <= item.reorderLevel) {
-      return { status: 'low', label: 'Low Stock', color: 'secondary' as const };
+      return { status: 'low', label: 'Low Stock', color: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
     } else {
-      return { status: 'normal', label: 'In Stock', color: 'default' as const };
+      return { status: 'normal', label: 'In Stock', color: 'default' as const, className: 'bg-green-100 text-green-800 border-green-200' };
     }
   };
 
@@ -95,11 +105,41 @@ export default function AllInventoryPage() {
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysUntilExpiry < 0) {
-      return { status: 'expired', label: 'Expired', color: 'destructive' as const };
+      return { status: 'expired', label: 'Expired', color: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-200' };
     } else if (daysUntilExpiry <= 30) {
-      return { status: 'expiring', label: `${daysUntilExpiry} days`, color: 'secondary' as const };
+      return { status: 'expiring', label: `${daysUntilExpiry} days`, color: 'secondary' as const, className: 'bg-orange-100 text-orange-800 border-orange-200' };
     } else {
-      return { status: 'valid', label: 'Valid', color: 'default' as const };
+      return { status: 'valid', label: 'Valid', color: 'default' as const, className: 'bg-green-100 text-green-800 border-green-200' };
+    }
+  };
+
+  const handleViewItem = (item: any) => {
+    setSelectedItem(item);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditItem = (item: any) => {
+    setSelectedItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteItem = (item: any) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedItem) return;
+    
+    try {
+      // TODO: Implement delete API call
+      console.log('Deleting item:', selectedItem.id);
+      // await deleteInventoryItem(selectedItem.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+      refetch();
+    } catch (error) {
+      console.error('Error deleting item:', error);
     }
   };
 
@@ -291,26 +331,42 @@ export default function AllInventoryPage() {
                       <div className="font-medium">₹{totalValue.toLocaleString()}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={stockStatus.color}>
+                      <Badge variant={stockStatus.color} className={stockStatus.className}>
                         {stockStatus.label}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={expiryStatus.color}>
+                      <Badge variant={expiryStatus.color} className={expiryStatus.className}>
                         {expiryStatus.label}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleViewItem(item)}
+                          title="View Details"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditItem(item)}
+                          title="Edit Item"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600">
+                        {/* <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-600"
+                          onClick={() => handleDeleteItem(item)}
+                          title="Delete Item"
+                        >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -327,6 +383,277 @@ export default function AllInventoryPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* View Item Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Eye className="h-5 w-5 mr-2" />
+              Item Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Hash className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">ID:</span>
+                    <span className="text-sm text-gray-900">{selectedItem.id}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Tag className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">Name:</span>
+                    <span className="text-sm text-gray-900">{selectedItem.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Category:</span>
+                    <Badge variant="outline" className="capitalize text-gray-700">
+                      {selectedItem.category}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Description:</span>
+                    <span className="text-sm text-gray-900">{selectedItem.description || 'No description'}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Stock:</span>
+                    <span className="text-sm text-gray-900">{selectedItem.stock} {selectedItem.unit}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Reorder Level:</span>
+                    <span className="text-sm text-gray-900">{selectedItem.reorderLevel}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Cost Price:</span>
+                    <span className="text-sm text-gray-900">₹{selectedItem.costPrice}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Selling Price:</span>
+                    <span className="text-sm text-gray-900">₹{selectedItem.sellingPrice}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Expiry Date:</span>
+                  <span className="text-sm text-gray-900">
+                    {new Date(selectedItem.expiryDate).toLocaleDateString()}
+                  </span>
+                  <Badge variant={getExpiryStatus(selectedItem).color} className={getExpiryStatus(selectedItem).className}>
+                    {getExpiryStatus(selectedItem).label}
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Batch Number:</span>
+                  <span className="text-sm text-gray-900">{selectedItem.batchNumber}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Supplier ID:</span>
+                  <span className="text-sm text-gray-900">{selectedItem.supplierId}</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700">Stock Status:</span>
+                <Badge variant={getStockStatus(selectedItem).color} className={getStockStatus(selectedItem).className}>
+                  {getStockStatus(selectedItem).label}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Inventory Item</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Item Name</label>
+                  <Input 
+                    value={selectedItem.name} 
+                    onChange={(e) => setSelectedItem({...selectedItem, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
+                  <Select value={selectedItem.category} onValueChange={(value) => setSelectedItem({...selectedItem, category: value})}>
+                    <SelectTrigger className="text-gray-700 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="text-gray-700 bg-white">
+                      <SelectItem value="Herb">Herb</SelectItem>
+                      <SelectItem value="Oil">Oil</SelectItem>
+                      <SelectItem value="Powder">Powder</SelectItem>
+                      <SelectItem value="Tablet">Tablet</SelectItem>
+                      <SelectItem value="Liquid">Liquid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Stock</label>
+                  <Input 
+                    type="number"
+                    value={selectedItem.stock} 
+                    onChange={(e) => setSelectedItem({...selectedItem, stock: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Unit</label>
+                  <Select value={selectedItem.unit} onValueChange={(value) => setSelectedItem({...selectedItem, unit: value})}>
+                    <SelectTrigger className="text-gray-700 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="text-gray-700 bg-white">
+                      <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                      <SelectItem value="g">Gram (g)</SelectItem>
+                      <SelectItem value="ml">Milliliter (ml)</SelectItem>
+                      <SelectItem value="l">Liter (l)</SelectItem>
+                      <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                      <SelectItem value="bottles">Bottles</SelectItem>
+                      <SelectItem value="boxes">Boxes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Cost Price (₹)</label>
+                  <Input 
+                    type="number"
+                    value={selectedItem.costPrice} 
+                    onChange={(e) => setSelectedItem({...selectedItem, costPrice: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Selling Price (₹)</label>
+                  <Input 
+                    type="number"
+                    value={selectedItem.sellingPrice} 
+                    onChange={(e) => setSelectedItem({...selectedItem, sellingPrice: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Reorder Level</label>
+                  <Input 
+                    type="number"
+                    value={selectedItem.reorderLevel} 
+                    onChange={(e) => setSelectedItem({...selectedItem, reorderLevel: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Expiry Date</label>
+                  <Input 
+                    type="date"
+                    value={new Date(selectedItem.expiryDate).toISOString().split('T')[0]} 
+                    onChange={(e) => setSelectedItem({...selectedItem, expiryDate: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedItem(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={async () => {
+                    try {
+                      // Ensure all required fields are present and properly formatted
+                      const updateData = {
+                        id: selectedItem.id,
+                        name: selectedItem.name,
+                        category: selectedItem.category,
+                        stock: Number(selectedItem.stock),
+                        unit: selectedItem.unit,
+                        costPrice: Number(selectedItem.costPrice),
+                        sellingPrice: Number(selectedItem.sellingPrice),
+                        supplierId: selectedItem.supplierId,
+                        expiryDate: selectedItem.expiryDate,
+                        reorderLevel: Number(selectedItem.reorderLevel),
+                        batchNumber: selectedItem.batchNumber,
+                        createdAt: selectedItem.createdAt || new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                      };
+
+                      console.log('Sending update data:', updateData);
+
+                      const response = await fetch('/api/inventory', {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                      });
+
+                      if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('API Error:', errorData);
+                        throw new Error(errorData.error || 'Failed to update item');
+                      }
+
+                      // Show success message
+                      toast.success('Item updated successfully');
+                      setIsEditDialogOpen(false);
+                      setSelectedItem(null);
+                      refetch();
+                    } catch (error) {
+                      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+                      toast.error(errorMessage);
+                      console.error('Error updating item:', error);
+                    }
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <Trash2 className="h-5 w-5 mr-2" />
+              Delete Item
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{selectedItem?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setSelectedItem(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

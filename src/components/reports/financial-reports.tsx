@@ -148,7 +148,7 @@ export function FinancialReports() {
             selected={startDate}
             onChange={setStartDate}
             placeholderText="Select start date"
-            className="w-full p-2 border rounded-md bg-white shadow-sm"
+            className="w-full p-2 border rounded-md bg-white shadow-sm text-gray-700"
           />
         </div>
         <div className="flex-1">
@@ -157,7 +157,7 @@ export function FinancialReports() {
             selected={endDate}
             onChange={setEndDate}
             placeholderText="Select end date"
-            className="w-full p-2 border rounded-md bg-white shadow-sm"
+            className="w-full p-2 border rounded-md bg-white shadow-sm text-gray-700"
           />
         </div>
         <div className="flex items-end">
