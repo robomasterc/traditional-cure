@@ -5,7 +5,8 @@ export const SHEET_NAMES = {
   INVENTORY: 'Inventory',
   STAFF: 'Staff',
   TRANSACTIONS: 'Transactions',
-  SUPPLIERS: 'Suppliers'
+  SUPPLIERS: 'Suppliers',
+  ORDERS: 'Orders'
 } as const;
 
 export const SHEET_COLUMNS = {
@@ -93,6 +94,20 @@ export const SHEET_COLUMNS = {
     'Email',
     'Address',
     'Speciality'
+  ],
+  [SHEET_NAMES.ORDERS]: [
+    'ID',
+    'PO Number',
+    'Supplier ID',
+    'Supplier Name',
+    'Order Date',
+    'Expected Delivery',
+    'Status',
+    'Total Amount',
+    'Items',
+    'Notes',
+    'Created By',
+    'Created At'
   ]
 } as const;
 

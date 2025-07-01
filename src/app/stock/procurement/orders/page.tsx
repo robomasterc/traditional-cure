@@ -31,15 +31,13 @@ import {
   Send,
   Building,
   DollarSign,
-  CheckCircle,
-  Clock,
-  TrendingUp,
   Grid3X3,
   List,
   AlertTriangle
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { useSuppliers } from '@/hooks/useSuppliers';
+import { useOrders } from '@/hooks/useOrders';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from '@/components/ui/table';
 
@@ -71,6 +69,7 @@ interface InventoryItem {
 export default function PurchaseOrdersPage() {
   const { inventory, loading: inventoryLoading, error: inventoryError, refetch: refetchInventory } = useInventory();
   const { suppliers, loading: suppliersLoading, error: suppliersError, refetch: refetchSuppliers } = useSuppliers();
+  const { createOrder, loading: orderLoading } = useOrders();
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -819,15 +818,49 @@ export default function PurchaseOrdersPage() {
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  // TODO: Implement purchase order creation
-                  toast.success('Purchase order created successfully!');
-                  clearCart();
-                  setIsCheckoutOpen(false);
+                onClick={async () => {
+                  try {
+                    if (!checkoutData.expectedDelivery) {
+                      toast.error('Please select an expected delivery date');
+                      return;
+                    }
+
+                    // Generate PO number
+                    const poNumber = `PO-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+                    
+                    // Create order data
+                    const orderData = {
+                      poNumber,
+                      supplierId: checkoutData.supplierId,
+                      supplierName: checkoutData.supplierName,
+                      orderDate: new Date().toISOString().split('T')[0],
+                      expectedDelivery: checkoutData.expectedDelivery,
+                      status: 'Draft' as const,
+                      totalAmount: getCartTotal(),
+                      items: cartItems.map(item => ({
+                        itemId: item.itemId,
+                        itemName: item.itemName,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        unitPrice: item.unitPrice,
+                        totalPrice: item.totalPrice,
+                      })),
+                      notes: checkoutData.notes,
+                      createdBy: 'Current User', // TODO: Get from auth context
+                    };
+
+                    await createOrder(orderData);
+                    clearCart();
+                    setIsCheckoutOpen(false);
+                  } catch (error) {
+                    console.error('Error creating order:', error);
+                    // Error is already handled by the useOrders hook
+                  }
                 }}
+                disabled={orderLoading}
                 className="flex-1"
               >
-                Create Order
+                {orderLoading ? 'Creating Order...' : 'Create Order'}
               </Button>
             </div>
           </div>

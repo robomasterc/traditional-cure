@@ -4,7 +4,7 @@ dotenv.config();
 import { google } from 'googleapis';
 import { SHEET_NAMES, SHEET_COLUMNS, SPREADSHEET_ID } from '../config/sheets';
 import { suppliersData } from '../types/sheets';
-import type { Patient, Consultation, Prescription, InventoryItem, Staff, Transaction } from '../types/sheets';
+import type { Patient, Consultation, Prescription, InventoryItem, Staff, Transaction, Supplier } from '../types/sheets';
 
 const auth = new google.auth.GoogleAuth({
   credentials: {
@@ -224,7 +224,7 @@ async function initializeSheets() {
       
       const values = [
         columns,
-        ...data.map((item: any) => {
+        ...data.map((item: Patient | Staff | InventoryItem | Consultation | Prescription | Transaction | Supplier) => {
           const row = columns.map((col: string) => {
             if (col === 'ID') {
               return item.id;
@@ -234,7 +234,7 @@ async function initializeSheets() {
             if (Array.isArray(value)) {
               return value.join(', ');
             }
-            return value instanceof Date ? value.toISOString() : value;
+            return value && typeof value === 'object' && 'toISOString' in value ? (value as Date).toISOString() : value;
           });
           console.log(`Row data for ${name}:`, row);
           return row;
@@ -247,7 +247,7 @@ async function initializeSheets() {
         spreadsheetId: SPREADSHEET_ID,
         range: `${name}!A1`,
         valueInputOption: 'USER_ENTERED',
-        requestBody: { values: values as any[][] },
+        requestBody: { values: values as string[][] },
       });
     }
 

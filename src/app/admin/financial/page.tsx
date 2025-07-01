@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Card } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
 import { DollarSign, TrendingUp, Users, CreditCard } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs-new';
 import { Transaction } from '@/types/sheets';
 import { FinancialReports } from '@/components/reports/financial-reports';
@@ -22,7 +21,6 @@ interface DashboardData {
 }
 
 export default function AdminFinancialPage() {
-  const { data: session } = useSession();
   const [dashboardData, setDashboardData] = React.useState<DashboardData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -46,15 +44,7 @@ export default function AdminFinancialPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  }; 
 
   if (loading) {
     return (

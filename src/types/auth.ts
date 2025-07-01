@@ -1,5 +1,3 @@
-import { DefaultSession } from 'next-auth';
-
 export type UserRole = 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'stock_manager';
 
 declare module 'next-auth' {

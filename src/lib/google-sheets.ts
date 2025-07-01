@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { sheets_v4 } from 'googleapis';
+import { GoogleAuth } from 'google-auth-library';
 import type { Patient, Consultation, Prescription, InventoryItem, Staff, Transaction, Supplier } from '../types/sheets';
 import { UserRole } from '@/types/auth';
 
@@ -9,19 +10,14 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
 
 const ROLES_SHEET_NAME = process.env.GOOGLE_SHEETS_ROLES_SHEET_NAME;
 
-interface UserRoleData {
-  email: string;
-  roles: UserRole[];
-}
-
 export class GoogleSheetsService {
-  private auth: any;
+  private auth: GoogleAuth;
   private sheets: sheets_v4.Sheets;
   private spreadsheetId: string;
 
   constructor(spreadsheetId: string) {
     this.spreadsheetId = spreadsheetId;
-    this.auth = new google.auth.GoogleAuth({
+    this.auth = new GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -36,7 +32,9 @@ export class GoogleSheetsService {
    */
   async authenticate(): Promise<void> {
     try {
-      await this.auth.authorize();
+      // GoogleAuth automatically handles authentication when making API calls
+      // No need to explicitly call authorize
+      console.log('GoogleAuth initialized successfully');
     } catch (error) {
       console.error('Authentication failed:', error);
       throw new Error('Failed to authenticate with Google Sheets API');
@@ -46,7 +44,7 @@ export class GoogleSheetsService {
   /**
    * Get values from a specific range in the spreadsheet
    */
-  async getRange(range: string): Promise<any[][]> {
+  async getRange(range: string): Promise<string[][]> {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
@@ -62,7 +60,7 @@ export class GoogleSheetsService {
   /**
    * Append a row to the specified range
    */
-  async appendRow(range: string, values: any[]): Promise<void> {
+  async appendRow(range: string, values: (string | number | boolean)[]): Promise<void> {
     try {
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
@@ -81,7 +79,7 @@ export class GoogleSheetsService {
   /**
    * Update a specific row in the spreadsheet
    */
-  async updateRow(range: string, values: any[]): Promise<void> {
+  async updateRow(range: string, values: (string | number | boolean)[]): Promise<void> {
     try {
       await this.sheets.spreadsheets.values.update({
         spreadsheetId: this.spreadsheetId,
@@ -262,7 +260,7 @@ export class GoogleSheetsService {
         return [];
       }
       // Find the row matching the email
-      const userRow = rows.slice(1).find((row: any[]) => row[0]?.toLowerCase() === email.toLowerCase());
+      const userRow = rows.slice(1).find((row: string[]) => row[0]?.toLowerCase() === email.toLowerCase());
       
       if (!userRow) {
         console.error('❌ No roles found for email:', email);
