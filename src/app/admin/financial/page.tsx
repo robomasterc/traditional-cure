@@ -80,7 +80,7 @@ export default function AdminFinancialPage() {
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <Typography variant="small" color="muted">Today's Revenue</Typography>
+              <Typography variant="small" color="muted">Today&apos;s Revenue</Typography>
               <Typography variant="h4">{new Intl.NumberFormat('en-IN', {
                 style: 'currency',
                 currency: 'INR',

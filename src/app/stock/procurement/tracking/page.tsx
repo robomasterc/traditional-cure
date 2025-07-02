@@ -31,9 +31,6 @@ import {
   Phone,
   MapPin,
   Clock,
-  Calendar,
-  CheckCircle,
-  XCircle
 } from 'lucide-react';
 
 interface OrderTracking {
@@ -65,7 +62,7 @@ interface TrackingItem {
 }
 
 export default function OrderTrackingPage() {
-  const [orders, setOrders] = useState<OrderTracking[]>([
+  const [orders] = useState<OrderTracking[]>([
     {
       id: 'TR001',
       poNumber: 'PO-2024-001',

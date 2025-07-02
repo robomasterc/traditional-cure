@@ -4,13 +4,13 @@ import { signIn } from 'next-auth/react';
 import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { FcGoogle } from 'react-icons/fc';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SignInPage() {
+function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams() || {};
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';  
   const error = searchParams.get('error');
 
@@ -91,5 +91,21 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Typography variant="h2" className="text-3xl font-extrabold text-gray-900">
+            Loading...
+          </Typography>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 } 

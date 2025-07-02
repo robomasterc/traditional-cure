@@ -44,7 +44,7 @@ export default function HomePage() {
                 </Typography>
                 <Typography variant="p" className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                   Streamline your healthcare operations with our comprehensive management system. 
-                  From patient care to inventory management, we've got you covered.
+                  From patient care to inventory management, we&apos;ve got you covered.
                 </Typography>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">

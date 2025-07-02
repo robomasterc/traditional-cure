@@ -36,7 +36,7 @@ export default function RoleManagementPage() {
       const response = await fetch('/api/admin/roles');
       const data = await response.json();
       setUsers(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch users');
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function RoleManagementPage() {
       setNewEmail('');
       setSelectedRoles([]);
       toast.success('User roles updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update user roles');
     } finally {
       setSaving(false);
@@ -91,7 +91,7 @@ export default function RoleManagementPage() {
       
       await fetchUsers();
       toast.success('User roles updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update user roles');
     } finally {
       setSaving(false);
@@ -111,7 +111,7 @@ export default function RoleManagementPage() {
       
       await fetchUsers();
       toast.success('User removed successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove user');
     } finally {
       setSaving(false);

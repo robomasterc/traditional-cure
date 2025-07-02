@@ -48,14 +48,6 @@ export default function CashDashboardPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -90,7 +82,7 @@ export default function CashDashboardPage() {
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <Typography variant="small" color="muted">Today's Revenue</Typography>
+              <Typography variant="small" color="muted">Today&apos;s Revenue</Typography>
               <Typography variant="h4">{new Intl.NumberFormat('en-IN', {
                 style: 'currency',
                 currency: 'INR',

@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Minus, X, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
+
 
 interface InvoiceItem {
   patientId: string;
@@ -55,9 +56,13 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
   ]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const { getAvailableMedicines } = useInventory();
 
-  // Inventory hook for medicine selection
-  const { inventory, loading: inventoryLoading, getAvailableMedicines } = useInventory();
+  const updatePaymentMethod = (index: number, field: keyof PaymentMethod, value: string | number) => {
+    const newPaymentMethods = [...paymentMethods];
+    newPaymentMethods[index] = { ...newPaymentMethods[index], [field]: value };
+    setPaymentMethods(newPaymentMethods);
+  };
 
   React.useEffect(() => {
     if (editData && editData.length > 0) {
@@ -84,7 +89,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     
     // Clear any previous errors when opening dialog
     setError(null);
-  }, [editData, isOpen, selectedPatientId, selectedDoctorId]);
+  }, [editData, isOpen, selectedPatientId, selectedDoctorId, editId]);
 
   const addRow = () => {
     setItems([...items, {
@@ -105,7 +110,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
     }
   };
 
-  const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
+  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     
@@ -163,22 +168,6 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
 
   const calculatePaymentTotal = () => {
     return paymentMethods.reduce((sum, pm) => sum + pm.amount, 0);
-  };
-
-  const addPaymentMethod = () => {
-    setPaymentMethods([...paymentMethods, { method: 'UPI', amount: 0 }]);
-  };
-
-  const removePaymentMethod = (index: number) => {
-    if (paymentMethods.length > 1) {
-      setPaymentMethods(paymentMethods.filter((_, i) => i !== index));
-    }
-  };
-
-  const updatePaymentMethod = (index: number, field: keyof PaymentMethod, value: any) => {
-    const newPaymentMethods = [...paymentMethods];
-    newPaymentMethods[index] = { ...newPaymentMethods[index], [field]: value };
-    setPaymentMethods(newPaymentMethods);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -357,21 +346,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
           </div>
         )}
 
-        {inventoryLoading && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-blue-800">Loading inventory data...</p>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="overflow-x-auto">

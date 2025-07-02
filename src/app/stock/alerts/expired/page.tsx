@@ -77,10 +77,9 @@ export default function ExpiredItemsPage() {
 
   const categories = Array.from(new Set(inventory.map(item => item.category)));
 
-  const getDaysSinceExpiry = (expiryDate: string) => {
+  const getDaysSinceExpiry = (expiryDate: Date) => {
     const now = new Date();
-    const expiry = new Date(expiryDate);
-    const diffTime = now.getTime() - expiry.getTime();
+    const diffTime = now.getTime() - expiryDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };

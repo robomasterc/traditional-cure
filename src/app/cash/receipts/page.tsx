@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Printer, Layout, Archive } from 'lucide-react';
 

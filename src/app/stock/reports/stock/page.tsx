@@ -29,14 +29,10 @@ import {
   Eye,
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
   BarChart,
-  PieChart,
-  Calendar,
   DollarSign,
   CheckCircle,
   XCircle,
-  Clock
 } from 'lucide-react';
 
 interface StockItem {
@@ -61,7 +57,7 @@ interface StockItem {
 }
 
 export default function StockReportPage() {
-  const [stockItems, setStockItems] = useState<StockItem[]>([
+  const [stockItems] = useState<StockItem[]>([
     {
       id: 'INV001',
       name: 'Ashwagandha',

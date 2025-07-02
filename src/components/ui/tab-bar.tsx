@@ -7,7 +7,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
-import { useTabs, Tab } from '@/contexts/TabContext';
+import { useTabs } from '@/contexts/TabContext';
 import { TAB_CONFIG } from '@/config/tabs';
 
 interface TabBarProps {

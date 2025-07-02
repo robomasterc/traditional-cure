@@ -28,16 +28,11 @@ import {
   Download,
   Eye,
   BarChart,
-  PieChart,
   DollarSign,
-  Package,
   Star,
   Target,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Percent,
-  Calculator
+  Calculator,
+  Package
 } from 'lucide-react';
 
 interface ABCItem {
@@ -63,7 +58,7 @@ interface ABCItem {
 }
 
 export default function ABCAnalysisPage() {
-  const [abcItems, setAbcItems] = useState<ABCItem[]>([
+  const [abcItems] = useState<ABCItem[]>([
     {
       id: 'INV001',
       name: 'Ashwagandha',
@@ -654,7 +649,8 @@ export default function ABCAnalysisPage() {
                     <div>
                       <div className="text-sm">
                         <span className="text-gray-500">Usage: </span>
-                        <span className="font-medium">{item.annualUsage} {item.unit}</span>
+                        <span className="font-medium">{item.annualUsage}</span>
+                        {/* <span className="font-medium">{item.annualUsage} {item.unit}</span> */}
                       </div>
                       <div className="text-sm">
                         <span className="text-gray-500">Cost: </span>

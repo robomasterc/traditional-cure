@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect, useCallback } from 'react';
 
 export interface InventoryItem {
@@ -63,7 +64,7 @@ export function useInventory(): UseInventoryReturn {
     if (shouldFetch) {
       fetchInventory();
     }
-  }, [fetchInventory, inventory.length, lastFetch]);
+  }, [fetchInventory, inventory.length, lastFetch, CACHE_DURATION]);
 
   const getMedicineById = useCallback((id: string): InventoryItem | undefined => {
     return inventory.find(item => item.id === id);

@@ -11,11 +11,11 @@ export default function UnauthorizedPage() {
           Access Denied
         </Typography>
         <Typography color="muted" className="mb-6">
-          You don't have permission to access this page. Please contact your administrator if you believe this is a mistake.
+          You don&apos;t have permission to access this page. Please contact your administrator if you believe this is a mistake.
         </Typography>
         <div className="space-y-4">
           <Link href="/dashboard">
-            <Button variant="primary" className="w-full">
+            <Button className="w-full">
               Go to Dashboard
             </Button>
           </Link>

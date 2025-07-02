@@ -18,7 +18,6 @@ const transactionSchema = z.object({
   createdAt: z.string()
 });
 
-type Transaction = z.infer<typeof transactionSchema>;
 
 export async function GET(request: NextRequest) {
   try {

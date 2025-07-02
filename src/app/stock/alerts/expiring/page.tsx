@@ -159,7 +159,7 @@ export default function ExpiringSoonPage() {
               <div>
                 <p className="text-sm text-gray-600">Critical (≤7 days)</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {expiringItems.filter(item => getDaysUntilExpiry(item.expiryDate) <= 7).length}
+                  {expiringItems.filter(item => getDaysUntilExpiry(item.expiryDate.toISOString()) <= 7).length}
                 </p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function ExpiringSoonPage() {
                 <p className="text-sm text-gray-600">Warning (≤15 days)</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {expiringItems.filter(item => {
-                    const days = getDaysUntilExpiry(item.expiryDate);
+                    const days = getDaysUntilExpiry(item.expiryDate.toISOString());
                     return days > 7 && days <= 15;
                   }).length}
                 </p>
@@ -302,7 +302,7 @@ export default function ExpiringSoonPage() {
             </TableHeader>
             <TableBody>
               {expiringItems.map((item) => {
-                const daysLeft = getDaysUntilExpiry(item.expiryDate);
+                const daysLeft = getDaysUntilExpiry(item.expiryDate.toISOString());
                 const status = getExpiryStatus(daysLeft);
                 const valueAtRisk = item.stock * item.sellingPrice;
 

@@ -56,7 +56,7 @@ export function useSuppliers(): UseSuppliersReturn {
     if (shouldFetch) {
       fetchSuppliers();
     }
-  }, [fetchSuppliers, suppliers.length, lastFetch]);
+  }, [fetchSuppliers, suppliers.length, lastFetch, CACHE_DURATION]);
 
   const getSupplierById = useCallback((id: string): Supplier | undefined => {
     return suppliers.find(supplier => supplier.id === id);

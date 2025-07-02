@@ -25,8 +25,44 @@ const invoiceSchema = z.object({
   })).optional(), // Optional payment methods
 });
 
-type InvoiceItem = z.infer<typeof invoiceItemSchema>;
-type Invoice = z.infer<typeof invoiceSchema>;
+// Type definitions
+type SheetRow = string[];
+type InvoiceRecord = {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  type: string;
+  category: string;
+  description: string;
+  quantity: number;
+  amount: number;
+  total: number;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+};
+type GroupedInvoice = {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  category: string;
+  description: string;
+  quantity: string | number;
+  amount: string | number;
+  total: number;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  items: Array<{
+    doctorId: string;
+    type: string;
+    category: string;
+    description: string;
+    quantity: number;
+    amount: number;
+    total: number;
+  }>;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Get all invoices from Google Sheets
     const rows = await sheetsService.getRange('Invoices!A2:L');
     
-    let invoices = rows.map((row: any[]) => ({
+    let invoices: InvoiceRecord[] = rows.map((row: SheetRow) => ({
       id: row[0],
       patientId: row[1],
       doctorId: row[2],
@@ -71,7 +107,7 @@ export async function GET(request: NextRequest) {
     }
 
     // group invoice by invoiceId and sum the total amount of the invoice
-    const groupedInvoices = invoices.reduce((acc: any, invoice: any) => {
+    const groupedInvoices = invoices.reduce((acc: Record<string, GroupedInvoice>, invoice: InvoiceRecord) => {
       const invoiceId = invoice.id;
       
       if (!acc[invoiceId]) {
@@ -119,7 +155,7 @@ export async function GET(request: NextRequest) {
     }, {});
         
     // Convert to array and sort by creation date
-    const result = Object.values(groupedInvoices).sort((a: any, b: any) => 
+    const result = Object.values(groupedInvoices).sort((a: GroupedInvoice, b: GroupedInvoice) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
@@ -139,16 +175,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
-    try {
-      const validatedData = invoiceSchema.parse(body);
-    } catch (validationError) {
-      console.error("Validation error details:", validationError);
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: validationError instanceof Error ? validationError.message : 'Unknown validation error'
-      }, { status: 400 });
-    }
-
+    // Validate the request body
     const validatedData = invoiceSchema.parse(body);
     const createdBy = session.user.name || session.user.email || '';
     const createdAt = new Date().toISOString();
@@ -201,7 +228,7 @@ export async function PUT(request: NextRequest) {
 
     // Find the row with the given ID and update its status
     const rows = await sheetsService.getRange('Invoices!A:L');
-    const rowIndex = rows.findIndex((row: any[]) => row[0] === id);
+    const rowIndex = rows.findIndex((row: SheetRow) => row[0] === id);
 
     if (rowIndex === -1) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
@@ -222,68 +249,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
   }
 }
-
-// Helper function to create transactions from completed invoice
-// async function createTransactionsFromInvoice(invoiceId: string, createdBy: string, paymentMethods?: Array<{ method: string; amount: number }>) {
-//   try {
-//     // Get all items for this invoice
-//     const rows = await sheetsService.getRange('Invoices!A:L');
-//     const invoiceItems = rows.filter((row: any[]) => row[0] === invoiceId);
-    
-//     if (invoiceItems.length === 0) {
-//       console.log('No items found for invoice:', invoiceId);
-//       return;
-//     }
-
-//     // Get consultation item for patient/doctor details
-//     const consultationItem = invoiceItems.find((row: any[]) => row[3] === 'Consultation');
-//     const patientId = consultationItem ? consultationItem[1] : '';
-//     const doctorId = consultationItem ? consultationItem[2] : '';
-
-//     // Calculate total amount
-//     const totalAmount = invoiceItems.reduce((sum: number, row: any[]) => sum + Number(row[8]), 0);
-
-//     // Use provided payment methods or default to 70% cash, 30% UPI
-//     let totalCash = 0;
-//     let totalUPI = 0;
-    
-//     if (paymentMethods && paymentMethods.length > 0) {
-//       // Use provided payment methods
-//       paymentMethods.forEach(pm => {
-//         if (pm.method === 'Cash') {
-//           totalCash += pm.amount;
-//         } else if (pm.method === 'UPI') {
-//           totalUPI += pm.amount;
-//         }
-//       });
-//     } else {
-//       // Default split: 70% cash, 30% UPI
-//       totalCash = Math.round(totalAmount * 0.7);
-//       totalUPI = totalAmount - totalCash;
-//     }
-
-//     // Create transaction record
-//     const transactionValues = [
-//       new Date().toISOString().replace(/[-:]/g, '').slice(0, 15), // ID
-//       'Income', // Type
-//       'Patient Billing', // Category
-//       totalCash.toString(), // Cash amount
-//       totalUPI.toString(), // UPI amount
-//       `Invoice ${invoiceId} - ${patientId}`, // Description
-//       patientId, // Patient ID
-//       doctorId, // Staff ID (using doctor ID)
-//       new Date().toISOString().split('T')[0], // Date
-//       createdBy, // Created by
-//       new Date().toISOString() // Created at
-//     ];
-
-//     await sheetsService.appendRow('Transactions!A:J', transactionValues);
-//     console.log('Transaction created for invoice:', invoiceId, 'Cash:', totalCash, 'UPI:', totalUPI);
-    
-//   } catch (error) {
-//     console.error('Error creating transaction from invoice:', error);
-//   }
-// }
 
 // Helper function to create transaction from new invoice
 async function createTransactionFromInvoice(invoiceId: string, patientId: string, doctorId: string, paymentMethods: Array<{ method: string; amount: number }>, createdBy: string) {
@@ -337,7 +302,7 @@ async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: A
   try {
     // Get all items for this invoice
     const rows = await sheetsService.getRange('Transactions!A:K');
-    const transactionRows = rows.filter((row: any[]) => row[0] === `Inv-${invoiceId}`);
+    const transactionRows = rows.filter((row: SheetRow) => row[0] === `Inv-${invoiceId}`);
 
     console.log("transactionRows================", transactionRows);
     
@@ -346,17 +311,12 @@ async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: A
       return;
     }
 
-    // Get consultation item for patient/doctor details
-    // const consultationItem = transactionItems.find((row: any[]) => row[3] === 'Consultation');
-    // const patientId = consultationItem ? consultationItem[1] : '';
-    // const doctorId = consultationItem ? consultationItem[2] : '';
-
     // Calculate total amount
-    const totalAmount = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[3]) + Number(row[4]), 0);
+    const totalAmount = transactionRows.reduce((sum: number, row: SheetRow) => sum + Number(row[3]) + Number(row[4]), 0);
 
     // Use provided payment methods or default to 70% cash, 30% UPI
-    let totalCash = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[3]), 0);
-    let totalUPI = transactionRows.reduce((sum: number, row: any[]) => sum + Number(row[4]), 0);
+    let totalCash = transactionRows.reduce((sum: number, row: SheetRow) => sum + Number(row[3]), 0);
+    let totalUPI = transactionRows.reduce((sum: number, row: SheetRow) => sum + Number(row[4]), 0);
     
     if (paymentMethods && paymentMethods.length > 0) {
       // Use provided payment methods
@@ -374,8 +334,7 @@ async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: A
     }
 
     // Find existing transaction for this invoice
-    // const transactionRows = await sheetsService.getRange('Transactions!A:K');
-    const transactionRowIndex = rows.findIndex((row: any[]) => 
+    const transactionRowIndex = rows.findIndex((row: SheetRow) => 
       row[0] && row[0].includes(`Inv-${invoiceId}`)
     );
 

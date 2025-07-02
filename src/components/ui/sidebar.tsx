@@ -50,14 +50,16 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
     setShowUserRoles(!showUserRoles);
   };
 
-  const handleMenuClick = (menuItem: any, color?: string) => {
+  const handleMenuClick = (menuItem: { subItems?: unknown[]; path?: string; label: string; icon?: React.ComponentType<{ className?: string }> }, color?: string) => {
     if (menuItem.subItems) {
       toggleSubmenu(menuItem.label);
       return;
     }
 
     // Open tab for the menu item
-    openTab(menuItem.path, menuItem.label, menuItem.icon, color);
+    if (menuItem.path) {
+      openTab(menuItem.path, menuItem.label, menuItem.icon, color);
+    }
   };
 
   return (

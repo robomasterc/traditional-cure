@@ -98,7 +98,7 @@ export const authOptions: NextAuthOptions = {
       console.log('=== Session Callback ===');
       console.log('Session before:', {
         email: session.user?.email,
-        hasRoles: !!(session as any).roles,
+        hasRoles: !!(session as { roles?: UserRole[] }).roles,
       });
 
       const updatedSession = {
@@ -141,14 +141,6 @@ export const authOptions: NextAuthOptions = {
       console.log('Token:', {
         email: token.email,
         hasRoles: !!token.roles,
-      });
-    },
-    async error({ error }: { error: Error }) {
-      console.error('=== Auth Error Event ===');
-      console.error('Error:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
       });
     },
   },

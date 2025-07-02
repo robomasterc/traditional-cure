@@ -29,11 +29,7 @@ import {
   RefreshCw,
   Eye,
   CheckCircle,
-  XCircle,
   Truck,
-  Calendar,
-  Clock,
-  FileText,
   Plus
 } from 'lucide-react';
 
@@ -71,7 +67,7 @@ interface ReceivingItem {
 }
 
 export default function GoodsReceivingPage() {
-  const [receivings, setReceivings] = useState<GoodsReceiving[]>([
+  const [receivings] = useState<GoodsReceiving[]>([
     {
       id: 'GR001',
       poNumber: 'PO-2024-001',

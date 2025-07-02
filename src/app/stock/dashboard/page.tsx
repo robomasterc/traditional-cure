@@ -4,17 +4,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { 
   Package, 
   AlertTriangle, 
   TrendingUp, 
-  TrendingDown, 
   Clock, 
   XCircle,
   Plus,
-  Search,
-  Filter,
   RefreshCw
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
@@ -82,11 +78,6 @@ export default function StockDashboardPage() {
       new Date(item.expiryDate) <= thirtyDaysFromNow && 
       new Date(item.expiryDate) > now
     );
-  };
-
-  const getStockUtilization = (item: any) => {
-    const utilization = (item.stock / (item.stock + item.reorderLevel)) * 100;
-    return Math.min(utilization, 100);
   };
 
   if (loading) {

@@ -1,43 +1,35 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSession } from 'next-auth/react';
+
 import { toast } from 'sonner';
 import { 
-  Stethoscope, 
-  Pill, 
-  Syringe, 
-  Clock,
-  ChevronDown,
-  ChevronUp,
   Plus,
   Edit,
   RefreshCw
 } from 'lucide-react';
 import InvoiceDialog from './components/InvoiceDialog';
 
-interface BillingOption {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}
-
-interface BillingForm {
-  patientId: string;
-  amount: number;
-  paymentMethod: 'cash' | 'upi';
-  description: string;
-}
-
+// Import the InvoiceItem type from the dialog component
 interface InvoiceItem {
+  patientId: string;
+  doctorId: string;
+  type: 'Consultation' | 'Medicine' | 'Procedure' | 'Discount';
+  category: string;
+  description: string;
+  quantity: number;
+  amount: number;
+  total: number;
+}
+
+
+
+
+
+interface InvoiceRecord {
   id: string;
   patientId: string;
   doctorId: string;
@@ -50,51 +42,25 @@ interface InvoiceItem {
   status: string;
   createdBy: string;
   createdAt: string;
+  items?: Array<{
+    doctorId: string;
+    type: string;
+    category: string;
+    description: string;
+    quantity: number;
+    amount: number;
+    total: number;
+  }>;
 }
 
-const billingOptions: BillingOption[] = [
-  {
-    id: 'consultation',
-    label: 'Consultation Billing',
-    icon: Stethoscope,
-    description: 'Process consultation payments'
-  },
-  {
-    id: 'medicine',
-    label: 'Medicine Billing',
-    icon: Pill,
-    description: 'Process medicine payments'
-  },
-  {
-    id: 'treatment',
-    label: 'Treatment Billing',
-    icon: Syringe,
-    description: 'Process treatment payments'
-  },
-  {
-    id: 'pending',
-    label: 'Pending Payments',
-    icon: Clock,
-    description: 'View pending payments'
-  }
-];
 
 export default function BillingPage() {
-  const { data: session } = useSession();
-  const [activeSection, setActiveSection] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [invoices, setInvoices] = React.useState<InvoiceItem[]>([]);
+  const [invoices, setInvoices] = React.useState<InvoiceRecord[]>([]);
   const [loadingInvoices, setLoadingInvoices] = React.useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = React.useState(false);
-  const [editingInvoice, setEditingInvoice] = React.useState<{ id: string; items: any[] } | null>(null);
+  const [editingInvoice, setEditingInvoice] = React.useState<{ id: string; items: Array<{ patientId: string; doctorId: string; type: string; category: string; description: string; quantity: number; amount: number; total: number }> } | null>(null);
   const [selectedPatientId, setSelectedPatientId] = React.useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = React.useState<string>('');
-  const [formData, setFormData] = React.useState<BillingForm>({
-    patientId: '',
-    amount: 0,
-    paymentMethod: 'cash',
-    description: ''
-  });
 
   const fetchInvoices = async () => {
     setLoadingInvoices(true);
@@ -102,11 +68,11 @@ export default function BillingPage() {
       const today = new Date().toISOString().split('T')[0];
       const response = await fetch(`/api/cash/invoices?date=${today}`);
       if (response.ok) {
-        const data = await response.json() as InvoiceItem[];
+        const data = await response.json() as InvoiceRecord[];
         setInvoices(data);
       }
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
+    } catch {
+      console.error('Error fetching invoices');
       toast.error('Failed to fetch invoices');
     } finally {
       setLoadingInvoices(false);
@@ -117,66 +83,18 @@ export default function BillingPage() {
     fetchInvoices();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const target = e.target as unknown as { name: string; value: string };
-    const { name, value } = target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'amount' ? Number(value) : value
-    }));
-  };
 
-  const handleSubmit = async (e: React.FormEvent, category: string) => {
-    e.preventDefault();
-    setLoading(true);
 
-    try {
-      const response = await fetch('/api/cash/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'Income',
-          category: category,
-          cash: formData.paymentMethod === 'cash' ? formData.amount : 0,
-          upi: formData.paymentMethod === 'upi' ? formData.amount : 0,
-          description: formData.description,
-          patientId: formData.patientId,
-          staffId: session?.user?.name || '',
-          date: new Date().toISOString(),
-          createdBy: session?.user?.name || '',
-          createdAt: new Date().toISOString()
-        }),
-      });
+  
 
-      if (!response.ok) {
-        throw new Error('Failed to process payment');
-      }
-
-      toast.success('Payment processed successfully');
-      setFormData({
-        patientId: '',
-        amount: 0,
-        paymentMethod: 'cash',
-        description: ''
-      });
-    } catch (error) {
-      toast.error('Failed to process payment');
-      console.error('Error processing payment:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditInvoice = (invoice: any) => {
+  const handleEditInvoice = (invoice: InvoiceRecord) => {
     
     // Extract patient and doctor IDs from the invoice
     setSelectedPatientId(invoice.patientId);
     setSelectedDoctorId(invoice.doctorId);
     
     // Convert the items array to the format expected by InvoiceDialog
-    const editItems = invoice.items.map((item: any) => ({
+    const editItems = invoice.items?.map((item: { doctorId: string; type: string; category: string; description: string; quantity: number; amount: number; total: number }) => ({
       patientId: invoice.patientId,
       doctorId: item.doctorId,
       type: item.type as 'Consultation' | 'Medicine' | 'Procedure' | 'Discount',
@@ -185,13 +103,13 @@ export default function BillingPage() {
       quantity: item.quantity,
       amount: item.amount,
       total: item.total
-    }));
+    })) || [];
     
     console.log("Edit items:", editItems);
     
     setEditingInvoice({
       id: invoice.id,
-      items: editItems
+      items: editItems as InvoiceItem[]
     });
     setShowInvoiceDialog(true);
   };
@@ -200,77 +118,7 @@ export default function BillingPage() {
     fetchInvoices();
     setEditingInvoice(null);
   };
-
-  const renderBillingForm = (category: string, title: string) => (
-    <Card className="p-6 mt-4">
-      <form onSubmit={(e) => handleSubmit(e, category)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="patientId">Patient ID</Label>
-            <Input
-              id="patientId"
-              name="patientId"
-              value={formData.patientId}
-              onChange={handleChange}
-              placeholder="Enter patient ID"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              value={formData.amount}
-              onChange={handleChange}
-              placeholder="Enter amount"
-              required
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment Method</Label>
-            <Select
-              name="paymentMethod"
-              value={formData.paymentMethod}
-              onValueChange={(value: 'cash' | 'upi') => 
-                setFormData(prev => ({ ...prev, paymentMethod: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="upi">UPI</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder={`Enter ${category.toLowerCase()} details`}
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Processing...' : `Process ${title}`}
-          </Button>
-        </div>
-      </form>
-    </Card>
-  );
+  
 
   return (
     <div className="space-y-6">
@@ -312,7 +160,7 @@ export default function BillingPage() {
       {/* Today's Invoices Table */}
       <Card className="p-6">
         <Typography variant="h3" className="mb-4">
-          Today's Invoices
+          Today&apos;s Invoices
         </Typography>
         
         {loadingInvoices ? (
@@ -431,7 +279,7 @@ export default function BillingPage() {
           setSelectedDoctorId('');
         }}
         onSuccess={handleInvoiceSuccess}
-        editData={editingInvoice?.items}
+        editData={editingInvoice?.items as InvoiceItem[]}
         editId={editingInvoice?.id}
         selectedPatientId={selectedPatientId}
         selectedDoctorId={selectedDoctorId}

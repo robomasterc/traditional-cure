@@ -24,7 +24,6 @@ import {
   Search, 
   Filter, 
   Plus, 
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Calendar,
@@ -44,7 +43,7 @@ interface StockMovement {
 }
 
 export default function StockMovementsPage() {
-  const [movements, setMovements] = useState<StockMovement[]>([
+  const [movements] = useState<StockMovement[]>([
     {
       id: 'MOV001',
       itemId: 'INV001',

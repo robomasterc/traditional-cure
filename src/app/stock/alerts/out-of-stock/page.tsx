@@ -60,10 +60,10 @@ export default function OutOfStockPage() {
 
   const categories = Array.from(new Set(inventory.map(item => item.category)));
 
-  const getDaysSinceOutOfStock = (item: any) => {
+  const getDaysSinceOutOfStock = (item: { updatedAt: Date }) => {
     // This would typically come from a stock movement history
     // For now, we'll use a placeholder calculation
-    const lastMovementDate = new Date(item.updatedAt);
+    const lastMovementDate = item.updatedAt;
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - lastMovementDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

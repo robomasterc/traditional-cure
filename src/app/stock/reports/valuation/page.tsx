@@ -28,15 +28,11 @@ import {
   Download,
   Eye,
   TrendingUp,
-  TrendingDown,
   BarChart,
-  PieChart,
   Calculator,
-  Package,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Calendar,
   Percent
 } from 'lucide-react';
 
@@ -65,7 +61,7 @@ interface ValuationItem {
 }
 
 export default function ValuationReportPage() {
-  const [valuationItems, setValuationItems] = useState<ValuationItem[]>([
+  const [valuationItems] = useState<ValuationItem[]>([
     {
       id: 'INV001',
       name: 'Ashwagandha',

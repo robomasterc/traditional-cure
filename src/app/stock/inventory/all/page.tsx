@@ -36,16 +36,13 @@ import {
   Trash2, 
   Eye,
   AlertTriangle,
-  XCircle,
-  Clock,
   Package,
   Calendar,
-  DollarSign,
   Hash,
   Tag
 } from 'lucide-react';
-import { useInventory } from '@/hooks/useInventory';
-import AddInventoryPage from '../add/page';
+import { useInventory, InventoryItem } from '@/hooks/useInventory';
+import { AddInventoryForm } from '../add/AddInventoryForm';
 import { toast } from 'sonner';
 
 export default function AllInventoryPage() {
@@ -57,7 +54,7 @@ export default function AllInventoryPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   // Filter inventory based on search and filters
   const filteredInventory = useMemo(() => {
@@ -89,7 +86,7 @@ export default function AllInventoryPage() {
     return filtered;
   }, [inventory, searchTerm, categoryFilter, stockFilter]);
 
-  const getStockStatus = (item: any) => {
+  const getStockStatus = (item: InventoryItem) => {
     if (item.stock === 0) {
       return { status: 'out', label: 'Out of Stock', color: 'destructive' as const, className: 'bg-red-100 text-red-800 border-red-200' };
     } else if (item.stock <= item.reorderLevel) {
@@ -99,7 +96,7 @@ export default function AllInventoryPage() {
     }
   };
 
-  const getExpiryStatus = (item: any) => {
+  const getExpiryStatus = (item: InventoryItem) => {
     const now = new Date();
     const expiryDate = new Date(item.expiryDate);
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -113,19 +110,14 @@ export default function AllInventoryPage() {
     }
   };
 
-  const handleViewItem = (item: any) => {
+  const handleViewItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setIsViewDialogOpen(true);
   };
 
-  const handleEditItem = (item: any) => {
+  const handleEditItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setIsEditDialogOpen(true);
-  };
-
-  const handleDeleteItem = (item: any) => {
-    setSelectedItem(item);
-    setIsDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -191,7 +183,7 @@ export default function AllInventoryPage() {
               <DialogTitle>Add New Inventory Item</DialogTitle>
             </DialogHeader>
             <div className="p-0">
-              <AddInventoryPage 
+              <AddInventoryForm 
                 isDialog={true}
                 onSuccess={() => {
                   setIsAddDialogOpen(false);
@@ -413,10 +405,7 @@ export default function AllInventoryPage() {
                       {selectedItem.category}
                     </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-700">Description:</span>
-                    <span className="text-sm text-gray-900">{selectedItem.description || 'No description'}</span>
-                  </div>
+
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
@@ -486,7 +475,7 @@ export default function AllInventoryPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
-                  <Select value={selectedItem.category} onValueChange={(value) => setSelectedItem({...selectedItem, category: value})}>
+                  <Select value={selectedItem.category} onValueChange={(value) => setSelectedItem({...selectedItem, category: value as 'Herb' | 'Oil' | 'Powder' | 'Tablet' | 'Liquid'})}>
                     <SelectTrigger className="text-gray-700 bg-white">
                       <SelectValue />
                     </SelectTrigger>
@@ -553,7 +542,7 @@ export default function AllInventoryPage() {
                   <Input 
                     type="date"
                     value={new Date(selectedItem.expiryDate).toISOString().split('T')[0]} 
-                    onChange={(e) => setSelectedItem({...selectedItem, expiryDate: e.target.value})}
+                    onChange={(e) => setSelectedItem({...selectedItem, expiryDate: new Date(e.target.value)})}
                   />
                 </div>
               </div>
@@ -632,7 +621,7 @@ export default function AllInventoryPage() {
               Delete Item
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedItem?.name}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{selectedItem?.name}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2">

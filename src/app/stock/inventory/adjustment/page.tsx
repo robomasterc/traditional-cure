@@ -25,9 +25,7 @@ import {
   Search, 
   Filter, 
   Plus, 
-  Edit,
   AlertTriangle,
-  CheckCircle,
   Package,
   TrendingUp,
   TrendingDown

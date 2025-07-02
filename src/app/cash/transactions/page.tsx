@@ -6,9 +6,7 @@ import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, Search, Filter } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { TransactionModal } from './components/TransactionModal';
 
@@ -26,8 +24,6 @@ interface Transaction {
 }
 
 export default function TransactionHistoryPage() {
-  const { data: session } = useSession();
-  const router = useRouter();
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);

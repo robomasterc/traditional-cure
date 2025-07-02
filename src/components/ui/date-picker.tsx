@@ -13,7 +13,7 @@ interface DatePickerProps {
 }
 
 export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
-  ({ selected, onChange, className, placeholderText, ...props }, ref) => {
+  ({ selected, onChange, className, placeholderText, ...props }) => {
     return (
       <ReactDatePicker
         selected={selected}
@@ -32,4 +32,6 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       />
     );
   }
-); 
+);
+
+DatePicker.displayName = "DatePicker"; 

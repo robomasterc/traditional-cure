@@ -31,14 +31,10 @@ import {
   Trash2,
   Phone,
   Mail,
-  MapPin,
   Star,
   Package,
   DollarSign,
-  Calendar,
   CheckCircle,
-  XCircle,
-  AlertTriangle
 } from 'lucide-react';
 
 interface Supplier {
@@ -69,7 +65,7 @@ interface Supplier {
 }
 
 export default function SupplierListPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([
+  const [suppliers] = useState<Supplier[]>([
     {
       id: 'SUP001',
       name: 'ABC Suppliers',

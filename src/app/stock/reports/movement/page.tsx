@@ -32,13 +32,6 @@ import {
   BarChart,
   ArrowUp,
   ArrowDown,
-  Package,
-  Calendar,
-  Clock,
-  DollarSign,
-  Users,
-  Truck,
-  ShoppingCart,
   RotateCcw
 } from 'lucide-react';
 
@@ -66,7 +59,7 @@ interface MovementItem {
 }
 
 export default function MovementReportPage() {
-  const [movementItems, setMovementItems] = useState<MovementItem[]>([
+  const [movementItems] = useState<MovementItem[]>([
     {
       id: 'INV001',
       name: 'Ashwagandha',

@@ -28,7 +28,7 @@ export default function LowStockAlertsPage() {
     item.stock <= item.reorderLevel && item.stock > 0
   );
 
-  const getUrgencyLevel = (item: any) => {
+  const getUrgencyLevel = (item: { stock: number; reorderLevel: number }) => {
     const stockPercentage = (item.stock / item.reorderLevel) * 100;
     if (stockPercentage <= 25) {
       return { level: 'critical', label: 'Critical', color: 'destructive' as const };

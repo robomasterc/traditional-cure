@@ -6,12 +6,9 @@ import { useTabs } from '@/contexts/TabContext';
 export function useTabNavigation() {
   const { addTab } = useTabs();
 
-  const openTab = async (path: string, title: string, icon?: any, color?: string) => {
+  const openTab = async (path: string, title: string, icon?: React.ComponentType<{ className?: string }>, color?: string) => {
     try {
-      let Component: React.ComponentType;
-      
-      // Map paths to components
-      const componentMap: Record<string, () => Promise<any>> = {
+      const componentMap: Record<string, () => Promise<{ default: React.ComponentType }>> = {
         '/dashboard': () => import('@/app/dashboard/page'),
         '/cash/dashboard': () => import('@/app/cash/dashboard/page'),
         '/cash/transactions': () => import('@/app/cash/transactions/page'),
@@ -46,8 +43,8 @@ export function useTabNavigation() {
         return;
       }
 
-      const module = await importFn();
-      Component = module.default;
+      const importedModule = await importFn();
+      const Component = importedModule.default;
 
       addTab({
         id: path,

@@ -1,6 +1,5 @@
 'use client';
 
-import { Container } from "@/components/ui/container";
 import { Sidebar } from "@/components/ui/sidebar";
 import { TabProvider } from "@/contexts/TabContext";
 import { TabBar } from "@/components/ui/tab-bar";
@@ -11,11 +10,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -36,7 +31,7 @@ export default function DashboardLayout({
     return null;
   }
 
-  const userRoles = (session as any).roles as UserRole[] || [];
+  const userRoles = (session as { roles?: UserRole[] }).roles || [];
   const userName = session.user.name || 'User';
   console.log("userRoles", userRoles);
   
