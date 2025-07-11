@@ -20,6 +20,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Search, 
   Filter, 
@@ -28,9 +29,9 @@ import {
   Package,
   RefreshCw,
   Eye,
-  Phone,
   MapPin,
   Clock,
+  MessageCircle,
 } from 'lucide-react';
 
 interface OrderTracking {
@@ -146,6 +147,9 @@ export default function OrderTrackingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [supplierFilter, setSupplierFilter] = useState<string>('all');
+  const [selectedOrder, setSelectedOrder] = useState<OrderTracking | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Filter orders
   const filteredOrders = useMemo(() => {
@@ -219,6 +223,46 @@ export default function OrderTrackingPage() {
     }
   };
 
+  // Action handlers
+  const handleViewDetails = (order: OrderTracking) => {
+    setSelectedOrder(order);
+    setShowDetailsModal(true);
+  };
+
+  const handleSendMessage = (order: OrderTracking) => {
+    const message = `Hi ${order.contactPerson}, I'm following up on order ${order.poNumber}. Current status: ${order.status}. Expected delivery: ${new Date(order.expectedDelivery).toLocaleDateString()}.`;
+    const whatsappUrl = `https://wa.me/${order.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleRefreshOrder = async (order: OrderTracking) => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call to refresh tracking data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log(`Refreshing tracking data for order ${order.poNumber}`);
+      // Here you would typically make an API call to update tracking information
+    } catch (error) {
+      console.error('Error refreshing order:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call to refresh all tracking data
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Refreshing all tracking data');
+      // Here you would typically make an API call to update all tracking information
+    } catch (error) {
+      console.error('Error refreshing all orders:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6 text-gray-700">
       {/* Header */}
@@ -228,9 +272,9 @@ export default function OrderTrackingPage() {
           <p className="text-gray-600 mt-1">Track pending orders and shipments</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => {}}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button variant="outline" onClick={handleRefreshAll} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Button>
             <Truck className="h-4 w-4 mr-2" />
@@ -482,14 +526,30 @@ export default function OrderTrackingPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleViewDetails(order)}
+                          title="View Details"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Phone className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleSendMessage(order)}
+                          title="Send WhatsApp Message"
+                        >
+                          <MessageCircle className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <RefreshCw className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleRefreshOrder(order)}
+                          disabled={isRefreshing}
+                          title="Refresh Tracking"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                         </Button>
                       </div>
                     </TableCell>
@@ -507,6 +567,113 @@ export default function OrderTrackingPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Order Details Modal */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order Details - {selectedOrder?.poNumber}</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6 text-gray-900">
+              {/* Basic Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Order Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">PO Number:</span> {selectedOrder.poNumber}</div>
+                    <div><span className="font-medium">Order Date:</span> {new Date(selectedOrder.orderDate).toLocaleDateString()}</div>
+                    <div><span className="font-medium">Expected Delivery:</span> {new Date(selectedOrder.expectedDelivery).toLocaleDateString()}</div>
+                    <div><span className="font-medium">Status:</span> {getStatusBadge(selectedOrder.status)}</div>
+                    <div><span className="font-medium">Total Amount:</span> ₹{selectedOrder.totalAmount.toLocaleString()}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Supplier Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Name:</span> {selectedOrder.supplierName}</div>
+                    <div><span className="font-medium">ID:</span> {selectedOrder.supplierId}</div>
+                    <div><span className="font-medium">Contact:</span> {selectedOrder.contactPerson}</div>
+                    <div><span className="font-medium">Phone:</span> {selectedOrder.contactPhone}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tracking Information */}
+              {(selectedOrder.trackingNumber || selectedOrder.carrier || selectedOrder.currentLocation) && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Tracking Information</h3>
+                  <div className="space-y-2 text-sm">
+                    {selectedOrder.trackingNumber && (
+                      <div><span className="font-medium">Tracking Number:</span> {selectedOrder.trackingNumber}</div>
+                    )}
+                    {selectedOrder.carrier && (
+                      <div><span className="font-medium">Carrier:</span> {selectedOrder.carrier}</div>
+                    )}
+                    {selectedOrder.currentLocation && (
+                      <div><span className="font-medium">Current Location:</span> {selectedOrder.currentLocation}</div>
+                    )}
+                    <div><span className="font-medium">Last Update:</span> {new Date(selectedOrder.lastUpdate).toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Items */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Order Items</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedOrder.items.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.itemName}</TableCell>
+                        <TableCell>{item.quantity} {item.unit}</TableCell>
+                        <TableCell>₹{item.unitPrice.toLocaleString()}</TableCell>
+                        <TableCell>₹{item.totalPrice.toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Notes */}
+              {selectedOrder.notes && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                    {selectedOrder.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleSendMessage(selectedOrder)}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Contact Supplier
+                </Button>
+                <Button 
+                  onClick={() => handleRefreshOrder(selectedOrder)}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh Tracking
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
