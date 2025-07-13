@@ -88,8 +88,25 @@ export async function POST(request: NextRequest) {
       validatedData.createdAt,
     ];
 
-    // Append to Orders sheet
-    await sheetsService.appendRow(SHEET_NAMES.ORDERS, orderData);
+    //for every item in validatedData.items, append to the items sheet
+    //ID	PONumber	SupplierID	OrderDate	ItemID	ItemName	Quantity	UnitPrice	Total	Notes	CreatedBy	CreatedAt
+    for (const item of validatedData.items) {
+      const itemData = [
+        validatedData.id,
+        validatedData.poNumber,
+        validatedData.supplierId,
+        validatedData.orderDate,
+        item.itemId,
+        item.itemName,
+        item.quantity,
+        item.unitPrice,
+        item.totalPrice,
+        validatedData.notes || '',
+        validatedData.createdBy,
+        validatedData.createdAt,
+      ];
+      await sheetsService.appendRow(SHEET_NAMES.ORDERS, itemData);
+    }
 
     return NextResponse.json(validatedData, { status: 201 });
   } catch (error) {

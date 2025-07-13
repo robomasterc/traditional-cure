@@ -33,13 +33,18 @@ import {
   DollarSign,
   Grid3X3,
   List,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useOrders } from '@/hooks/useOrders';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from '@/components/ui/table';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
 
 interface CartItem {
   itemId: string;
@@ -67,6 +72,8 @@ interface InventoryItem {
 }
 
 export default function PurchaseOrdersPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const { inventory, loading: inventoryLoading, error: inventoryError, refetch: refetchInventory } = useInventory();
   const { suppliers, loading: suppliersLoading, error: suppliersError, refetch: refetchSuppliers } = useSuppliers();
   const { createOrder, loading: orderLoading } = useOrders();
@@ -76,7 +83,7 @@ export default function PurchaseOrdersPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [supplierFilter, setSupplierFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   
   // Dialog states
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -87,6 +94,8 @@ export default function PurchaseOrdersPage() {
     expectedDelivery: '',
     notes: ''
   });
+  const [supplierGroups, setSupplierGroups] = useState<Record<string, { supplierId: string; supplierName: string; items: CartItem[] }>>({});
+  const [currentSupplierIndex, setCurrentSupplierIndex] = useState(0);
 
   // Transform inventory data to match the expected format
   const inventoryItems: InventoryItem[] = useMemo(() => {
@@ -213,7 +222,7 @@ export default function PurchaseOrdersPage() {
     }
 
     // Group items by supplier
-    const supplierGroups = cartItems.reduce((groups, item) => {
+    const groups = cartItems.reduce((groups, item) => {
       if (!groups[item.supplierId]) {
         groups[item.supplierId] = {
           supplierId: item.supplierId,
@@ -225,8 +234,11 @@ export default function PurchaseOrdersPage() {
       return groups;
     }, {} as Record<string, { supplierId: string; supplierName: string; items: CartItem[] }>);
 
-    // For now, just show the first supplier's checkout
-    const firstSupplier = Object.values(supplierGroups)[0];
+    setSupplierGroups(groups);
+    setCurrentSupplierIndex(0);
+    
+    // Set checkout data for the first supplier
+    const firstSupplier = Object.values(groups)[0];
     setCheckoutData({
       supplierId: firstSupplier.supplierId,
       supplierName: firstSupplier.supplierName,
@@ -243,6 +255,51 @@ export default function PurchaseOrdersPage() {
       return { status: 'low', label: 'Low Stock', color: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
     } else {
       return { status: 'normal', label: 'In Stock', color: 'default' as const, className: 'bg-green-100 text-green-800 border-green-200' };
+    }
+  };
+
+  const getCurrentSupplierItems = () => {
+    const supplierKeys = Object.keys(supplierGroups);
+    if (supplierKeys.length === 0) return [];
+    const currentSupplierId = supplierKeys[currentSupplierIndex];
+    return supplierGroups[currentSupplierId]?.items || [];
+  };
+
+  const getCurrentSupplierTotal = () => {
+    return getCurrentSupplierItems().reduce((sum, item) => sum + item.totalPrice, 0);
+  };
+
+  const goToNextSupplier = () => {
+    const supplierKeys = Object.keys(supplierGroups);
+    if (currentSupplierIndex < supplierKeys.length - 1) {
+      const nextIndex = currentSupplierIndex + 1;
+      const nextSupplierId = supplierKeys[nextIndex];
+      const nextSupplier = supplierGroups[nextSupplierId];
+      
+      setCurrentSupplierIndex(nextIndex);
+      setCheckoutData({
+        supplierId: nextSupplier.supplierId,
+        supplierName: nextSupplier.supplierName,
+        expectedDelivery: '',
+        notes: ''
+      });
+    }
+  };
+
+  const goToPreviousSupplier = () => {
+    if (currentSupplierIndex > 0) {
+      const prevIndex = currentSupplierIndex - 1;
+      const supplierKeys = Object.keys(supplierGroups);
+      const prevSupplierId = supplierKeys[prevIndex];
+      const prevSupplier = supplierGroups[prevSupplierId];
+      
+      setCurrentSupplierIndex(prevIndex);
+      setCheckoutData({
+        supplierId: prevSupplier.supplierId,
+        supplierName: prevSupplier.supplierName,
+        expectedDelivery: '',
+        notes: ''
+      });
     }
   };
 
@@ -323,7 +380,7 @@ export default function PurchaseOrdersPage() {
               Cart ({getCartItemCount()})
             </Button>
             <Button 
-              onClick={() => setIsCheckoutOpen(true)}
+              onClick={handleCheckout}
               disabled={cartItems.length === 0}
             >
               <Send className="h-4 w-4 mr-2" />
@@ -640,9 +697,13 @@ export default function PurchaseOrdersPage() {
                               >
                                 <Minus className="h-4 w-4" />
                               </Button>
-                              <span className="text-sm font-medium min-w-[60px] text-center">
-                                {cartItem.quantity}
-                              </span>
+                              <Input
+                                type="number"
+                                value={cartItem.quantity}
+                                onChange={(e) => updateCartQuantity(item.id, parseInt(e.target.value) || 0)}
+                                className="h-8 w-20 px-2 text-center"
+                                min={0}
+                              />
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -656,7 +717,6 @@ export default function PurchaseOrdersPage() {
                             <Button
                               onClick={() => addToCart(item)}
                               size="sm"
-                              disabled={item.currentStock === 0}
                             >
                               <Plus className="h-4 w-4 mr-1" />
                               Add
@@ -757,9 +817,36 @@ export default function PurchaseOrdersPage() {
       <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Send className="h-5 w-5 mr-2" />
-              Create Purchase Order
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Send className="h-5 w-5 mr-2" />
+                Create Purchase Order
+              </div>
+              {Object.keys(supplierGroups).length > 1 && (
+                <div className="flex items-center space-x-2 text-sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToPreviousSupplier}
+                    disabled={currentSupplierIndex === 0}
+                    className="h-6 w-6 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-gray-600">
+                    {currentSupplierIndex + 1} of {Object.keys(supplierGroups).length}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToNextSupplier}
+                    disabled={currentSupplierIndex === Object.keys(supplierGroups).length - 1}
+                    className="h-6 w-6 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 text-gray-700">
@@ -796,7 +883,7 @@ export default function PurchaseOrdersPage() {
             <div className="border-t pt-4">
               <h4 className="font-semibold mb-2">Order Summary</h4>
               <div className="space-y-2">
-                {cartItems.map((item) => (
+                {getCurrentSupplierItems().map((item) => (
                   <div key={item.itemId} className="flex justify-between text-sm">
                     <span>{item.itemName} × {item.quantity} {item.unit}</span>
                     <span>₹{item.totalPrice}</span>
@@ -804,7 +891,7 @@ export default function PurchaseOrdersPage() {
                 ))}
                 <div className="border-t pt-2 flex justify-between font-semibold">
                   <span>Total:</span>
-                  <span>₹{getCartTotal().toLocaleString()}</span>
+                  <span>₹{getCurrentSupplierTotal().toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -828,7 +915,7 @@ export default function PurchaseOrdersPage() {
                     // Generate PO number
                     const poNumber = `PO-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
                     
-                    // Create order data
+                    // Create order data for current supplier only
                     const orderData = {
                       poNumber,
                       supplierId: checkoutData.supplierId,
@@ -836,8 +923,8 @@ export default function PurchaseOrdersPage() {
                       orderDate: new Date().toISOString().split('T')[0],
                       expectedDelivery: checkoutData.expectedDelivery,
                       status: 'Draft' as const,
-                      totalAmount: getCartTotal(),
-                      items: cartItems.map(item => ({
+                      totalAmount: getCurrentSupplierTotal(),
+                      items: getCurrentSupplierItems().map(item => ({
                         itemId: item.itemId,
                         itemName: item.itemName,
                         quantity: item.quantity,
@@ -846,12 +933,28 @@ export default function PurchaseOrdersPage() {
                         totalPrice: item.totalPrice,
                       })),
                       notes: checkoutData.notes,
-                      createdBy: 'Current User', // TODO: Get from auth context
+                      createdBy:  session?.user?.name || '',
                     };
 
                     await createOrder(orderData);
-                    clearCart();
-                    setIsCheckoutOpen(false);
+                    
+                    // Remove items for this supplier from cart
+                    const currentSupplierItems = getCurrentSupplierItems();
+                    const currentSupplierItemIds = currentSupplierItems.map(item => item.itemId);
+                    setCartItems(prev => prev.filter(item => !currentSupplierItemIds.includes(item.itemId)));
+                    
+                    // Check if there are more suppliers to process
+                    const supplierKeys = Object.keys(supplierGroups);
+                    if (currentSupplierIndex < supplierKeys.length - 1) {
+                      // Move to next supplier
+                      goToNextSupplier();
+                      toast.success(`Order created for ${checkoutData.supplierName}. Moving to next supplier...`);
+                    } else {
+                      // All suppliers processed
+                      clearCart();
+                      setIsCheckoutOpen(false);
+                      toast.success('All purchase orders created successfully!');
+                    }
                   } catch (error) {
                     console.error('Error creating order:', error);
                     // Error is already handled by the useOrders hook
@@ -860,7 +963,8 @@ export default function PurchaseOrdersPage() {
                 disabled={orderLoading}
                 className="flex-1"
               >
-                {orderLoading ? 'Creating Order...' : 'Create Order'}
+                {orderLoading ? 'Creating Order...' : 
+                  currentSupplierIndex === Object.keys(supplierGroups).length - 1 ? 'Create Final Order' : 'Create Order & Continue'}
               </Button>
             </div>
           </div>

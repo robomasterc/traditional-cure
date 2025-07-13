@@ -97,18 +97,19 @@ export const SHEET_COLUMNS = {
   ],
   [SHEET_NAMES.ORDERS]: [
     'ID',
-    'PO Number',
-    'Supplier ID',
-    'Supplier Name',
-    'Order Date',
-    'Expected Delivery',
-    'Status',
-    'Total Amount',
-    'Items',
+    'PONumber',
+    'SupplierID', 
+    'OrderDate',
+    'ItemID',
+    'ItemName',
+    'Quantity',
+    'UnitPrice',
+    'Total',
     'Notes',
-    'Created By',
-    'Created At'
-  ]
+    'CreatedBy',
+    'CreatedAt'
+  ],
+  
 } as const;
 
 export const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || ''; 

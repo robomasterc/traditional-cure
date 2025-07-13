@@ -100,8 +100,8 @@ export function Sidebar({ userRoles, userName }: SidebarProps) {
                   <button
                     onClick={() => toggleRole(role)}
                     className={cn(
-                      "w-full flex items-center justify-between p-2 rounded-md hover:bg-green-100",
-                      expandedRole === role && "bg-yellow-100"
+                      "w-full flex items-center justify-between rounded-md hover:bg-green-200",
+                      expandedRole === role && "bg-blue-300"
                     )}
                   >
                     <div className="flex items-center">

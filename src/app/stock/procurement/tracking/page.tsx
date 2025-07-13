@@ -32,7 +32,9 @@ import {
   MapPin,
   Clock,
   MessageCircle,
+  Loader2,
 } from 'lucide-react';
+import { useOrderTracking } from '@/hooks/useOrderTracking';
 
 interface OrderTracking {
   id: string;
@@ -63,121 +65,28 @@ interface TrackingItem {
 }
 
 export default function OrderTrackingPage() {
-  const [orders] = useState<OrderTracking[]>([
-    {
-      id: 'TR001',
-      poNumber: 'PO-2024-001',
-      supplierName: 'ABC Suppliers',
-      supplierId: 'SUP001',
-      orderDate: '2024-01-15',
-      expectedDelivery: '2024-01-25',
-      status: 'In Transit',
-      currentLocation: 'Mumbai Distribution Center',
-      trackingNumber: 'TRK123456789',
-      carrier: 'Express Logistics',
-      lastUpdate: '2024-01-20T14:30:00Z',
-      totalAmount: 25000,
-      items: [
-        {
-          itemId: 'INV001',
-          itemName: 'Ashwagandha',
-          quantity: 50,
-          unit: 'kg',
-          unitPrice: 500,
-          totalPrice: 25000
-        }
-      ],
-      notes: 'Package left distribution center',
-      contactPerson: 'Rajesh Kumar',
-      contactPhone: '+91 98765 43210'
-    },
-    {
-      id: 'TR002',
-      poNumber: 'PO-2024-002',
-      supplierName: 'XYZ Pharmaceuticals',
-      supplierId: 'SUP002',
-      orderDate: '2024-01-16',
-      expectedDelivery: '2024-01-30',
-      status: 'Confirmed',
-      lastUpdate: '2024-01-18T10:15:00Z',
-      totalAmount: 15000,
-      items: [
-        {
-          itemId: 'INV002',
-          itemName: 'Brahmi',
-          quantity: 30,
-          unit: 'kg',
-          unitPrice: 500,
-          totalPrice: 15000
-        }
-      ],
-      notes: 'Order confirmed, preparing for shipment',
-      contactPerson: 'Priya Sharma',
-      contactPhone: '+91 87654 32109'
-    },
-    {
-      id: 'TR003',
-      poNumber: 'PO-2024-003',
-      supplierName: 'MediCare Supplies',
-      supplierId: 'SUP003',
-      orderDate: '2024-01-10',
-      expectedDelivery: '2024-01-20',
-      status: 'Delayed',
-      currentLocation: 'Delhi Hub',
-      trackingNumber: 'TRK987654321',
-      carrier: 'FastTrack Delivery',
-      lastUpdate: '2024-01-19T16:45:00Z',
-      totalAmount: 35000,
-      items: [
-        {
-          itemId: 'INV003',
-          itemName: 'Ginseng',
-          quantity: 25,
-          unit: 'kg',
-          unitPrice: 1400,
-          totalPrice: 35000
-        }
-      ],
-      notes: 'Weather delay in transit',
-      contactPerson: 'Amit Patel',
-      contactPhone: '+91 76543 21098'
-    }
-  ]);
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [supplierFilter, setSupplierFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<OrderTracking | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Filter orders
-  const filteredOrders = useMemo(() => {
-    let filtered = orders;
+  // Use the custom hook for order tracking
+  const {
+    orders,
+    loading,
+    error,
+    refreshing,
+    refreshOrders,
+    refreshOrder,
+    updateOrderTracking,
+  } = useOrderTracking({
+    status: statusFilter,
+    supplierId: supplierFilter,
+    searchTerm,
+  });
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(order =>
-        order.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.trackingNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === statusFilter);
-    }
-
-    // Supplier filter
-    if (supplierFilter !== 'all') {
-      filtered = filtered.filter(order => order.supplierId === supplierFilter);
-    }
-
-    return filtered.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
-  }, [orders, searchTerm, statusFilter, supplierFilter]);
-
+  // Get unique suppliers for filter dropdown
   const suppliers = Array.from(new Set(orders.map(order => ({ id: order.supplierId, name: order.supplierName }))));
 
   const getStatusBadge = (status: string) => {
@@ -230,38 +139,93 @@ export default function OrderTrackingPage() {
   };
 
   const handleSendMessage = (order: OrderTracking) => {
-    const message = `Hi ${order.contactPerson}, I'm following up on order ${order.poNumber}. Current status: ${order.status}. Expected delivery: ${new Date(order.expectedDelivery).toLocaleDateString()}.`;
-    const whatsappUrl = `https://wa.me/${order.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    // Create a comprehensive message with order details
+    let message = `Hi ${order.supplierName}, New order placed. Please fulfill the order as soon as possible.\n\n`;
+    
+    // Order basic info
+    message += `📋 *Order Details*\n`;
+    message += `PO Number: ${order.poNumber}\n`;
+    message += `Order Date: ${new Date(order.orderDate).toLocaleDateString()}\n`;
+    message += `Expected Delivery: ${new Date(order.expectedDelivery).toLocaleDateString()}\n`;
+    message += `Total Amount: ₹${order.totalAmount.toLocaleString()}\n\n`;
+    
+    // Current status and tracking info
+    // message += `📊 *Current Status*\n`;
+    // message += `Status: ${order.status}\n`;
+    // if (order.trackingNumber) {
+    //   message += `Tracking Number: ${order.trackingNumber}\n`;
+    // }
+    // if (order.carrier) {
+    //   message += `Carrier: ${order.carrier}\n`;
+    // }
+    // if (order.currentLocation) {
+    //   message += `Current Location: ${order.currentLocation}\n`;
+    // }
+    // message += `Last Update: ${new Date(order.lastUpdate).toLocaleString()}\n\n`;
+    
+    // Order items
+    message += `📦 *Order Items*\n\n`;
+    message += `| No. | Item Name | Quantity | Unit Price | Total |\n`;
+    message += `|-----|-----------|----------|------------|--------|\n`;
+    order.items.forEach((item, index) => {
+      message += `| ${index + 1} | ${item.itemName} | ${item.quantity} ${item.unit} | ₹${item.unitPrice.toLocaleString()} | ₹${item.totalPrice.toLocaleString()} |\n`;
+    });
+    message += '\n';
+    
+    // Add notes if available
+    if (order.notes) {
+      message += `📝 *Notes*\n${order.notes}\n\n`;
+    }
+    
+    // Days until delivery
+    const daysUntil = getDaysUntilDelivery(order.expectedDelivery);
+    if (daysUntil > 0) {
+      message += `⏰ *Delivery Info*\n${daysUntil} day${daysUntil !== 1 ? 's' : ''} until expected delivery\n`;
+    } else if (daysUntil < 0) {
+      message += `⚠️ *Delivery Info*\nOrder is ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue\n`;
+    } else {
+      message += `⏰ *Delivery Info*\nExpected delivery today\n`;
+    }
+    
+    message += `\nPlease let us know if you need any clarification or have updates on the order status.`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleRefreshOrder = async (order: OrderTracking) => {
-    setIsRefreshing(true);
-    try {
-      // Simulate API call to refresh tracking data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log(`Refreshing tracking data for order ${order.poNumber}`);
-      // Here you would typically make an API call to update tracking information
-    } catch (error) {
-      console.error('Error refreshing order:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refreshOrder(order.poNumber);
   };
 
   const handleRefreshAll = async () => {
-    setIsRefreshing(true);
-    try {
-      // Simulate API call to refresh all tracking data
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Refreshing all tracking data');
-      // Here you would typically make an API call to update all tracking information
-    } catch (error) {
-      console.error('Error refreshing all orders:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refreshOrders();
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">Error loading orders</p>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={refreshOrders}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 text-gray-700">
@@ -272,9 +236,9 @@ export default function OrderTrackingPage() {
           <p className="text-gray-600 mt-1">Track pending orders and shipments</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleRefreshAll} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <Button variant="outline" onClick={handleRefreshAll} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Button>
             <Truck className="h-4 w-4 mr-2" />
@@ -423,7 +387,7 @@ export default function OrderTrackingPage() {
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-600">
-          Showing {filteredOrders.length} of {orders.length} tracked orders
+          Showing {orders.length} tracked orders
         </p>
         <div className="flex space-x-4 text-sm">
           <div className="flex items-center space-x-2">
@@ -450,7 +414,7 @@ export default function OrderTrackingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order) => {
+              {orders.map((order: OrderTracking) => {
                 const daysUntilDelivery = getDaysUntilDelivery(order.expectedDelivery);
                 const isOverdue = daysUntilDelivery < 0 && ['Sent', 'Confirmed', 'In Transit', 'Out for Delivery'].includes(order.status);
 
@@ -546,10 +510,10 @@ export default function OrderTrackingPage() {
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleRefreshOrder(order)}
-                          disabled={isRefreshing}
+                          disabled={refreshing}
                           title="Refresh Tracking"
                         >
-                          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                         </Button>
                       </div>
                     </TableCell>
@@ -559,7 +523,7 @@ export default function OrderTrackingPage() {
             </TableBody>
           </Table>
           
-          {filteredOrders.length === 0 && (
+          {orders.length === 0 && (
             <div className="text-center py-8">
               <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">No orders found</p>
@@ -664,9 +628,9 @@ export default function OrderTrackingPage() {
                 </Button>
                 <Button 
                   onClick={() => handleRefreshOrder(selectedOrder)}
-                  disabled={isRefreshing}
+                  disabled={refreshing}
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                   Refresh Tracking
                 </Button>
               </div>
