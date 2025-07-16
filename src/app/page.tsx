@@ -39,7 +39,36 @@ export default function HomePage() {
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <Typography variant="h1" className="text-4xl tracking-tight font-extrabold text-green-600 sm:text-5xl md:text-6xl">
-                  <span className="block text-red-400">❛Agasthya❜</span>
+                  <span className="block text-red-400 relative h-16 overflow-hidden">
+                    {[
+                      '❛Agasthya❜', // Telugu
+                      '❛అగస్త్య❜', // Telugu
+                      '❛आगस्त्य❜', // Hindi
+                      '❛அகஸ்தியர்❜', // Tamil 
+                      '❛അഗസ്ത്യ❜', // Malayalam
+                      '❛ಅಗಸ್ತ್ಯ❜', // Kannada
+                      '❛अगस्त्य❜', // Marathi
+                      '❛અગસ્ત્ય❜', // Gujarati
+                      '❛ଅଗସ୍ତ୍ୟ❜', // Odia
+                      '❛অগস্ত্য❜', // Bengali
+                      '❛ਅਗਸਤ❜', // Punjabi
+                    ].map((text, i, arr) => {
+                      const slot = 60 / arr.length; // 3s per word
+                      return (
+                        <span
+                          key={i}
+                          className="absolute inset-0 flex items-center"
+                          style={{
+                          animation: `text-cycle 60s infinite`,
+                          animationDelay: `${i * slot}s`,
+                          opacity: i === 0 ? 1 : 0,
+                        }}
+                        >
+                          {text}
+                        </span>
+                      );
+                    })}
+                  </span>
                   <span className="block text-primary-600">Traditional Cure</span>
                 </Typography>
                 <Typography variant="p" className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">

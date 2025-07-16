@@ -179,11 +179,14 @@ export async function POST(request: NextRequest) {
     const validatedData = invoiceSchema.parse(body);
     const createdBy = session.user.name || session.user.email || '';
     const createdAt = new Date().toISOString();
-
+    console.log("validatedData================", validatedData);
+    // Ensure we have a valid invoiceId
+    const invoiceId = validatedData.invoiceId || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     // Append each item as a separate row
     for (const item of validatedData.items) {
       const values = [
-        validatedData.invoiceId || Date.now().toString(), // Use provided invoiceId or generate new one
+        invoiceId, // Use the consistent invoiceId
         item.patientId,
         item.doctorId,
         item.type,
@@ -202,7 +205,7 @@ export async function POST(request: NextRequest) {
 
     // Create transaction for new invoice
     if (validatedData.status === 'Ready' && validatedData.paymentMethods && validatedData.paymentMethods.length > 0) {
-      createTransactionFromInvoice(validatedData.invoiceId || Date.now().toString(), validatedData.items[0].patientId, validatedData.items[0].doctorId, validatedData.paymentMethods, createdBy);
+      createTransactionFromInvoice(invoiceId, validatedData.items[0].patientId, validatedData.items[0].doctorId, validatedData.paymentMethods, createdBy);
     }
 
     return NextResponse.json({ message: 'Invoice created successfully' });
@@ -301,10 +304,9 @@ async function createTransactionFromInvoice(invoiceId: string, patientId: string
 async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: Array<{ method: string; amount: number }>, createdBy: string) {
   try {
     // Get all items for this invoice
+    console.log("invoiceId================", invoiceId);
     const rows = await sheetsService.getRange('Transactions!A:K');
     const transactionRows = rows.filter((row: SheetRow) => row[0] === `Inv-${invoiceId}`);
-
-    console.log("transactionRows================", transactionRows);
     
     if (transactionRows.length === 0) {
       console.log('No items found for invoice:', `Inv-${invoiceId}`);

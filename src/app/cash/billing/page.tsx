@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { 
   Plus,
   Edit,
-  RefreshCw
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 import InvoiceDialog from './components/InvoiceDialog';
 
@@ -61,6 +62,7 @@ export default function BillingPage() {
   const [editingInvoice, setEditingInvoice] = React.useState<{ id: string; items: Array<{ patientId: string; doctorId: string; type: string; category: string; description: string; quantity: number; amount: number; total: number }> } | null>(null);
   const [selectedPatientId, setSelectedPatientId] = React.useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = React.useState<string>('');
+  const [isViewMode, setIsViewMode] = React.useState(false);
 
   const fetchInvoices = async () => {
     setLoadingInvoices(true);
@@ -111,6 +113,35 @@ export default function BillingPage() {
       id: invoice.id,
       items: editItems as InvoiceItem[]
     });
+    setIsViewMode(false);
+    setShowInvoiceDialog(true);
+  };
+
+  const handleViewInvoice = (invoice: InvoiceRecord) => {
+    
+    // Extract patient and doctor IDs from the invoice
+    setSelectedPatientId(invoice.patientId);
+    setSelectedDoctorId(invoice.doctorId);
+    
+    // Convert the items array to the format expected by InvoiceDialog
+    const viewItems = invoice.items?.map((item: { doctorId: string; type: string; category: string; description: string; quantity: number; amount: number; total: number }) => ({
+      patientId: invoice.patientId,
+      doctorId: item.doctorId,
+      type: item.type as 'Consultation' | 'Medicine' | 'Procedure' | 'Discount',
+      category: item.category,
+      description: item.description,
+      quantity: item.quantity,
+      amount: item.amount,
+      total: item.total
+    })) || [];
+    
+    console.log("View items:", viewItems);
+    
+    setEditingInvoice({
+      id: invoice.id,
+      items: viewItems as InvoiceItem[]
+    });
+    setIsViewMode(true);
     setShowInvoiceDialog(true);
   };
 
@@ -206,15 +237,24 @@ export default function BillingPage() {
                       </span>
                     </td>
                     <td className="p-2">
-                      {invoice.status !== 'Complete' && (
+                      <div className="flex space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEditInvoice(invoice)}
+                          onClick={() => handleViewInvoice(invoice)}
                         >
-                          <Edit className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </Button>
-                      )}
+                        {invoice.status !== 'Complete' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditInvoice(invoice)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -277,12 +317,14 @@ export default function BillingPage() {
           setEditingInvoice(null);
           setSelectedPatientId('');
           setSelectedDoctorId('');
+          setIsViewMode(false);
         }}
         onSuccess={handleInvoiceSuccess}
         editData={editingInvoice?.items as InvoiceItem[]}
         editId={editingInvoice?.id}
         selectedPatientId={selectedPatientId}
         selectedDoctorId={selectedDoctorId}
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -35,9 +35,10 @@ interface InvoiceDialogProps {
   editId?: string;
   selectedPatientId?: string;
   selectedDoctorId?: string;
+  isViewMode?: boolean;
 }
 
-export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, editId, selectedPatientId, selectedDoctorId }: InvoiceDialogProps) {
+export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, editId, selectedPatientId, selectedDoctorId, isViewMode = false }: InvoiceDialogProps) {
   const [items, setItems] = React.useState<InvoiceItem[]>([
     {
       patientId: '',
@@ -254,12 +255,16 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
           throw new Error('Please fill in all required fields for at least one item');
         }
         
+        // Generate a unique invoice ID with timestamp and random suffix
+        const uniqueInvoiceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
         const response = await fetch('/api/cash/invoices', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            invoiceId: uniqueInvoiceId,
             items: validItems,
             status: 'Ready',
             paymentMethods: paymentMethods // Include payment methods
@@ -327,7 +332,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
       <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editId ? 'Edit Invoice For: ' + items[0].patientId : 'Add New Invoice'}
+            {isViewMode ? 'View Invoice For: ' + items[0].patientId : 
+             editId ? 'Edit Invoice For: ' + items[0].patientId : 'Add New Invoice'}
           </DialogTitle>
         </DialogHeader>
 
@@ -374,7 +380,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                           onChange={handleInputChange(index, 'patientId')}
                           placeholder="Patient ID"
                           required
-                          className="w-full"
+                          className={`w-full ${isViewMode ? 'bg-gray-100' : ''}`}
+                          disabled={isViewMode}
                         />
                       </td>
                     )}
@@ -384,8 +391,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onChange={handleInputChange(index, 'doctorId')}
                         placeholder="Doctor ID"
                         required
-                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        className={`w-full ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       />
                     </td>
                     <td className="p-2">
@@ -394,9 +401,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onValueChange={(value: 'Consultation' | 'Medicine' | 'Procedure' | 'Discount') => 
                           updateItem(index, 'type', value)
                         }
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       >
-                        <SelectTrigger className={`w-full text-gray-700 bg-white ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}>
+                        <SelectTrigger className={`w-full text-gray-700 bg-white ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="text-gray-700 bg-white">
@@ -411,9 +418,9 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                       <Select
                         value={item.category}
                         onValueChange={(value) => updateItem(index, 'category', value)}
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       >
-                        <SelectTrigger className={`w-full text-gray-700 bg-white ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}>
+                        <SelectTrigger className={`w-full text-gray-700 bg-white ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}>
                           <SelectValue placeholder="Category">
                             {getCategoryDisplayValue(item.type, item.category)}
                           </SelectValue>
@@ -442,8 +449,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         value={item.description}
                         onChange={handleInputChange(index, 'description')}
                         placeholder="Description"
-                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        className={`w-full ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       />
                     </td>
                     <td className="p-2">
@@ -453,8 +460,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         onChange={handleInputChange(index, 'quantity')}
                         min="0"
                         required
-                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        className={`w-full ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       />
                     </td>
                     <td className="p-2">
@@ -465,8 +472,8 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                         min="0"
                         step="0.01"
                         required
-                        className={`w-full ${editId && item.type === 'Consultation' ? 'bg-gray-100' : ''}`}
-                        disabled={Boolean(editId && item.type === 'Consultation')}
+                        className={`w-full ${(editId && item.type === 'Consultation') || isViewMode ? 'bg-gray-100' : ''}`}
+                        disabled={Boolean(editId && item.type === 'Consultation') || isViewMode}
                       />
                     </td>
                     <td className="p-2">
@@ -478,7 +485,7 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
                       />
                     </td>
                     <td className="p-2">
-                      {items.length > 1 && !(editId && item.type === 'Consultation') && (
+                      {items.length > 1 && !(editId && item.type === 'Consultation') && !isViewMode && (
                         <Button
                           type="button"
                           variant="outline"
@@ -502,73 +509,85 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
             </div>
           </div>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={addRow}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
-            </Button>
-          </div>
+          {!isViewMode && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={addRow}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+          )}
 
           {/* Payment Methods Section */}
-          <div className="border-t pt-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Payment Methods</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="cash-amount">Cash Amount</Label>
-                <Input
-                  id="cash-amount"
-                  type="number"
-                  value={paymentMethods.find(p => p.method === 'Cash')?.amount || 0}
-                  onChange={(e) => {
-                    const target = e.target as unknown as { value: string };
-                    const cashIndex = paymentMethods.findIndex(p => p.method === 'Cash');
-                    if (cashIndex !== -1) {
-                      updatePaymentMethod(cashIndex, 'amount', Number(target.value));
-                    }
-                  }}
-                  placeholder="Enter cash amount"
-                  className="w-full"
-                  min="0"
-                  step="0.01"
-                />
+          {!isViewMode && (
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Payment Methods</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="cash-amount">Cash Amount</Label>
+                  <Input
+                    id="cash-amount"
+                    type="number"
+                    value={paymentMethods.find(p => p.method === 'Cash')?.amount || 0}
+                    onChange={(e) => {
+                      const target = e.target as unknown as { value: string };
+                      const cashIndex = paymentMethods.findIndex(p => p.method === 'Cash');
+                      if (cashIndex !== -1) {
+                        updatePaymentMethod(cashIndex, 'amount', Number(target.value));
+                      }
+                    }}
+                    placeholder="Enter cash amount"
+                    className="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="upi-amount">UPI Amount</Label>
+                  <Input
+                    id="upi-amount"
+                    type="number"
+                    value={paymentMethods.find(p => p.method === 'UPI')?.amount || 0}
+                    onChange={(e) => {
+                      const target = e.target as unknown as { value: string };
+                      const upiIndex = paymentMethods.findIndex(p => p.method === 'UPI');
+                      if (upiIndex !== -1) {
+                        updatePaymentMethod(upiIndex, 'amount', Number(target.value));
+                      }
+                    }}
+                    placeholder="Enter UPI amount"
+                    className="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="upi-amount">UPI Amount</Label>
-                <Input
-                  id="upi-amount"
-                  type="number"
-                  value={paymentMethods.find(p => p.method === 'UPI')?.amount || 0}
-                  onChange={(e) => {
-                    const target = e.target as unknown as { value: string };
-                    const upiIndex = paymentMethods.findIndex(p => p.method === 'UPI');
-                    if (upiIndex !== -1) {
-                      updatePaymentMethod(upiIndex, 'amount', Number(target.value));
-                    }
-                  }}
-                  placeholder="Enter UPI amount"
-                  className="w-full"
-                  min="0"
-                  step="0.01"
-                />
+              <div className="mt-3 text-sm text-gray-600">
+                Payment Total: ₹{calculatePaymentTotal().toFixed(2)}
+                {calculatePaymentTotal() !== calculateTotal() && (
+                  <span className="text-red-600 ml-2">
+                    (Must equal invoice total)
+                  </span>
+                )}
               </div>
             </div>
-            <div className="mt-3 text-sm text-gray-600">
-              Payment Total: ₹{calculatePaymentTotal().toFixed(2)}
-              {calculatePaymentTotal() !== calculateTotal() && (
-                <span className="text-red-600 ml-2">
-                  (Must equal invoice total)
-                </span>
-              )}
-            </div>
-          </div>
+          )}
           
           <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Processing...' : (editId ? 'Update Invoice' : 'Create Invoice')}
-            </Button>
+            {isViewMode ? (
+              <Button type="button" onClick={onClose}>
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Processing...' : (editId ? 'Update Invoice' : 'Create Invoice')}
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </DialogContent>
