@@ -179,9 +179,8 @@ export async function POST(request: NextRequest) {
     const validatedData = invoiceSchema.parse(body);
     const createdBy = session.user.name || session.user.email || '';
     const createdAt = new Date().toISOString();
-    console.log("validatedData================", validatedData);
     // Ensure we have a valid invoiceId
-    const invoiceId = validatedData.invoiceId || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const invoiceId = validatedData.invoiceId || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;    
     
     // Append each item as a separate row
     for (const item of validatedData.items) {
@@ -200,13 +199,19 @@ export async function POST(request: NextRequest) {
         createdAt
       ];
 
-      await sheetsService.appendRow('Invoices!A:L', values);
+       await sheetsService.appendRow('Invoices!A:L', values);
+
+      // Adjust inventory for Medicine items if status is Complete
+      if (validatedData.status === 'Complete' && item.type === 'Medicine' && item.category) {
+        // adjustInventoryByCategoryOptimized(item.category, item.quantity, createdBy, inventory, inventoryRows);
+        adjustInventoryByCategory(item.category, item.quantity, createdBy);
+      }
     }
 
     // Create transaction for new invoice
     if (validatedData.status === 'Ready' && validatedData.paymentMethods && validatedData.paymentMethods.length > 0) {
       createTransactionFromInvoice(invoiceId, validatedData.items[0].patientId, validatedData.items[0].doctorId, validatedData.paymentMethods, createdBy);
-    }
+    }    
 
     return NextResponse.json({ message: 'Invoice created successfully' });
   } catch (error) {
@@ -241,9 +246,12 @@ export async function PUT(request: NextRequest) {
     const updateRange = `Invoices!J${rowIndex + 1}`;
     await sheetsService.updateRow(updateRange, [status]);
 
-    // If status is being set to Complete and payment methods provided, update transaction
-    if (status === 'Complete' && paymentMethods && paymentMethods.length > 0) {
-      updateTransactionFromInvoice(id, paymentMethods, session.user.name || session.user.email || '');
+    // If status is being set to Complete, adjust inventory and update transaction
+    if (status === 'Complete') {      
+      // Update transaction if payment methods provided
+      if (paymentMethods && paymentMethods.length > 0) {
+        updateTransactionFromInvoice(id, paymentMethods, session.user.name || session.user.email || '');
+      }
     }
 
     return NextResponse.json({ message: 'Invoice updated successfully' });
@@ -300,11 +308,61 @@ async function createTransactionFromInvoice(invoiceId: string, patientId: string
   }
 }
 
+// Helper function to adjust inventory by category and quantity
+async function adjustInventoryByCategory(category: string, quantity: number, createdBy: string) {
+  try {
+    // Get current inventory
+    const inventoryRows = await sheetsService.getRange('Inventory!A2:M');
+    const inventory = inventoryRows.map((row: SheetRow) => ({
+      id: row[0],
+      name: row[1],
+      category: row[2],
+      stock: Number(row[3]),
+      unit: row[4],
+      costPrice: Number(row[5]),
+      sellingPrice: Number(row[6]),
+      supplierId: row[7],
+      expiryDate: row[8],
+      reorderLevel: Number(row[9]),
+      batchNumber: row[10],
+      description: row[11] || '',
+      createdAt: row[12],
+      updatedAt: row[13]
+    }));
+
+    // Find the inventory item by ID (category field contains medicine ID)
+    const inventoryItem = inventory.find(inv => inv.id === category);
+    
+    if (inventoryItem) {
+      // Calculate new stock (reduce by quantity sold)
+      const newStock = Math.max(0, inventoryItem.stock - quantity);
+      
+      // Find the row index for this inventory item
+      const inventoryRowIndex = inventoryRows.findIndex((row: SheetRow) => row[0] === category);
+      
+      if (inventoryRowIndex !== -1) {
+        // Update the stock in the inventory sheet
+        const updateRange = `Inventory!D${inventoryRowIndex + 2}`; // Stock column (D)
+        await sheetsService.updateRow(updateRange, [newStock.toString()]);
+        
+        // Update the updatedAt timestamp
+        const updatedAtRange = `Inventory!M${inventoryRowIndex + 2}`; // UpdatedAt column (M)
+        await sheetsService.updateRow(updatedAtRange, [new Date().toISOString()]);
+        
+        console.log(`Updated inventory for ${inventoryItem.name}: ${inventoryItem.stock} -> ${newStock} (sold ${quantity})`);
+      }
+    } else {
+      console.log(`Inventory item not found for ID: ${category}`);
+    }
+  } catch (error) {
+    console.error('Error adjusting inventory by category:', error);
+  }
+}
+
 // Helper function to update transaction from completed invoice
 async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: Array<{ method: string; amount: number }>, createdBy: string) {
   try {
     // Get all items for this invoice
-    console.log("invoiceId================", invoiceId);
     const rows = await sheetsService.getRange('Transactions!A:K');
     const transactionRows = rows.filter((row: SheetRow) => row[0] === `Inv-${invoiceId}`);
     

@@ -110,10 +110,10 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
               {features.map((feature) => (
                 <div key={feature.name} className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white mb-4">
+                  <div className="flex items-center justify-center h-1 w-12 rounded-md bg-primary-500 text-white mb-1">
                     <feature.icon className="h-6 w-6" aria-hidden="true" />
                   </div>
                   <Typography variant="h4" className="text-lg leading-6 font-medium text-gray-900">
