@@ -99,7 +99,7 @@ export function useStockMovements() {
     return fetchMovements({ date: today, groupBy: 'date' });
   }, [fetchMovements]);
 
-  const getLast30MonthsNetMovements = useCallback(() => {
+  const getLast1MonthsNetMovements = useCallback(() => {
     return fetchMovements({ groupBy: 'medicine' });
   }, [fetchMovements]);
 
@@ -170,7 +170,7 @@ export function useStockMovements() {
     getMovementsByDateRange,
     getNetMovementsByMedicine,
     getTodayMovements,
-    getLast30MonthsNetMovements,
+    getLast1MonthsNetMovements,
     getSummary,
     debugState,
     setViewMode

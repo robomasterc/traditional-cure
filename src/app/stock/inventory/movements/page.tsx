@@ -53,7 +53,7 @@ export default function StockMovementsPage() {
     getMovementsByDate,
     getMovementsByDateRange,
     getNetMovementsByMedicine,
-    getLast30MonthsNetMovements,
+    getLast1MonthsNetMovements,
     getSummary,
     debugState 
   } = useStockMovements();
@@ -62,20 +62,20 @@ export default function StockMovementsPage() {
   useEffect(() => {
     if (!initialLoadDone.current) {
       const today = new Date();
-      const thirtyMonthsAgo = new Date();
-      thirtyMonthsAgo.setMonth(today.getMonth() - 30);
+      const oneMonthsAgo = new Date();
+      oneMonthsAgo.setMonth(today.getMonth() - 1);
       
-      const defaultStartDate = thirtyMonthsAgo.toISOString().split('T')[0];
+      const defaultStartDate = oneMonthsAgo.toISOString().split('T')[0];
       const defaultEndDate = today.toISOString().split('T')[0];
       
       setStartDate(defaultStartDate);
       setEndDate(defaultEndDate);
       setDateFilter(defaultEndDate);
       
-      getLast30MonthsNetMovements();
+      getLast1MonthsNetMovements();
       initialLoadDone.current = true;
     }
-  }, [getLast30MonthsNetMovements]);
+  }, [getLast1MonthsNetMovements]);
 
   // Filter movements based on search and filters
   const filteredMovements = useMemo(() => {
@@ -166,7 +166,7 @@ export default function StockMovementsPage() {
       if (startDate && endDate) {
         getNetMovementsByMedicine(startDate, endDate);
       } else {
-        getLast30MonthsNetMovements();
+        getLast1MonthsNetMovements();
       }
     } else {
       if (dateFilter) {
@@ -205,7 +205,7 @@ export default function StockMovementsPage() {
             }
           </p>
         </div>
-        <div className="flex space-x-2">
+        {/* <div className="flex space-x-2">
           <Button variant="outline" onClick={handleDebugClick}>
             🐛 Debug
           </Button>
@@ -213,7 +213,7 @@ export default function StockMovementsPage() {
             <Plus className="h-4 w-4 mr-2" />
             Record Movement
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Error Display */}
