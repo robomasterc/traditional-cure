@@ -5,6 +5,8 @@ export interface StockAdjustment {
   itemId: string;
   itemName: string;
   quantity: number;
+  unitPrice: number;
+  total: number;
   adjustment: number;
   reason: string;
   date: string;

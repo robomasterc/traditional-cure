@@ -242,6 +242,8 @@ export class GoogleSheetsService {
         itemId: row[4],
         itemName: row[5],
         quantity: Number(row[6]),
+        unitPrice: Number(row[7]),
+        total: Number(row[8]),
         adjustment: row[0].startsWith('ADJ') ? -Number(row[6]) : Number(row[6]), // Negative for adjustments
         reason: row[9]?.split(':')[0] || 'Adjustment', // Extract reason from notes
         date: row[3],

@@ -75,11 +75,11 @@ export default function StockAdjustmentPage() {
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [adjustments, searchTerm, reasonFilter]);
 
-  const getAdjustmentIcon = (adjustment: number) => {
-    return adjustment > 0 ? (
-      <TrendingUp className="h-4 w-4 text-green-600" />
-    ) : (
+  const getAdjustmentIcon = (reason : string) => {
+    return getAdjustmentDirection(reason) === 'decrease' ? (
       <TrendingDown className="h-4 w-4 text-red-600" />
+    ) : (
+      <TrendingUp className="h-4 w-4 text-green-600" />
     );
   };
 
@@ -93,6 +93,14 @@ export default function StockAdjustmentPage() {
         {adjustment}
       </Badge>
     );
+  };
+
+  const getAdjustmentDirection = (reason: string) => {
+    const negativeReasons = ['damage', 'theft', 'expiry', 'quality control -', 'system error -', 'other -'];
+    const isNegative = negativeReasons.some(negativeReason => 
+      reason.toLowerCase().includes(negativeReason)
+    );
+    return isNegative ? 'decrease' : 'increase';
   };
 
   const handleSaveAdjustment = async () => {
@@ -115,15 +123,21 @@ export default function StockAdjustmentPage() {
     setIsSaving(true);
 
     try {
+      // Determine adjustment direction based on reason
+      const adjustmentDirection = getAdjustmentDirection(selectedReason);
+      const adjustment = adjustmentDirection === 'decrease' ? -quantity : quantity;
+
       // Create adjustment using the hook
       await createAdjustment({
         itemId: selectedInventoryItem.id,
         itemName: selectedInventoryItem.name,
         quantity,
-        adjustment: selectedReason.toLowerCase().includes('damage') || selectedReason.toLowerCase().includes('theft') || selectedReason.toLowerCase().includes('expiry') ? -quantity : quantity,
+        unitPrice: selectedInventoryItem.costPrice || 0,
+        total: (selectedInventoryItem.costPrice || 0) * quantity,
+        adjustment,
         reason: selectedReason,
         date: new Date().toISOString().split('T')[0],
-        adjustedBy: 'Current User', // TODO: Get from auth context
+        adjustedBy: 'Current User', // Will be set by API
         notes: notes || undefined,
       });
 
@@ -137,7 +151,7 @@ export default function StockAdjustmentPage() {
       // Refresh inventory
       await refetch();
 
-      const adjustmentValue = selectedReason.toLowerCase().includes('damage') || selectedReason.toLowerCase().includes('theft') || selectedReason.toLowerCase().includes('expiry') ? -quantity : quantity;
+      const adjustmentValue = adjustmentDirection === 'decrease' ? -quantity : quantity;
       toast.success(`Stock adjusted successfully. ${adjustmentValue > 0 ? '+' : ''}${adjustmentValue} ${selectedInventoryItem.unit}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -153,9 +167,12 @@ export default function StockAdjustmentPage() {
     'Found',
     'Theft',
     'Expiry',
-    'Quality Control',
-    'System Error',
-    'Other'
+    // 'Quality Control +',
+    // 'Quality Control -',
+    // 'System Error +',
+    // 'System Error -',
+    'Other +',
+    'Other -'
   ];
 
   if (inventoryLoading || adjustmentsLoading) {
@@ -236,9 +253,9 @@ export default function StockAdjustmentPage() {
                   {selectedInventoryItem && (
                     <div className="text-sm text-gray-500 mt-1">
                       Current: {selectedInventoryItem.stock} {selectedInventoryItem.unit}
-                      {adjustmentQuantity && (
-                        <span className={`ml-2 ${selectedReason.toLowerCase().includes('damage') || selectedReason.toLowerCase().includes('theft') || selectedReason.toLowerCase().includes('expiry') ? 'text-red-600' : 'text-green-600'}`}>
-                          ({selectedReason.toLowerCase().includes('damage') || selectedReason.toLowerCase().includes('theft') || selectedReason.toLowerCase().includes('expiry') ? '-' : '+'}{adjustmentQuantity})
+                      {adjustmentQuantity && selectedReason && (
+                        <span className={`ml-2 ${getAdjustmentDirection(selectedReason) === 'decrease' ? 'text-red-600' : 'text-green-600'}`}>
+                          ({getAdjustmentDirection(selectedReason) === 'decrease' ? '-' : '+'}{adjustmentQuantity})
                         </span>
                       )}
                     </div>
@@ -409,8 +426,9 @@ export default function StockAdjustmentPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
-                <TableHead>Quantity</TableHead>
                 <TableHead>Adjustment</TableHead>
+                <TableHead>Unit Price</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Adjusted By</TableHead>
                 <TableHead>Date</TableHead>
@@ -427,13 +445,16 @@ export default function StockAdjustmentPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{adjustment.quantity}</div>
-                  </TableCell>
-                  <TableCell>
                     <div className="flex items-center space-x-2">
-                      {getAdjustmentIcon(adjustment.adjustment)}
+                      {getAdjustmentIcon(adjustment.reason)}
                       {getAdjustmentBadge(adjustment.adjustment)}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">${adjustment.unitPrice.toFixed(2)}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">${adjustment.total.toFixed(2)}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize text-gray-700">
