@@ -23,15 +23,13 @@ import {
 import { 
   Search, 
   Filter, 
-  Plus, 
   ArrowUp,
   ArrowDown,
   Calendar,
   Package,
   Loader2,
   TrendingUp,
-  TrendingDown,
-  Clock
+  TrendingDown
 } from 'lucide-react';
 import { useStockMovements } from '@/hooks/useStockMovements';
 
@@ -50,7 +48,7 @@ export default function StockMovementsPage() {
     setViewMode,
     loading, 
     error, 
-    fetchMovements, 
+    // fetchMovements, 
     getMovementsByDate,
     getMovementsByDateRange,
     getNetMovementsByMedicine,

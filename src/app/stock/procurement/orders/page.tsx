@@ -43,7 +43,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from '@/components/ui/table';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 
 interface CartItem {
@@ -73,7 +73,7 @@ interface InventoryItem {
 
 export default function PurchaseOrdersPage() {
   const { data: session } = useSession();
-  const router = useRouter();
+  // const router = useRouter();
   const { inventory, loading: inventoryLoading, error: inventoryError, refetch: refetchInventory } = useInventory();
   const { suppliers, loading: suppliersLoading, error: suppliersError, refetch: refetchSuppliers } = useSuppliers();
   const { createOrder, loading: orderLoading } = useOrders();

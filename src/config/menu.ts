@@ -43,14 +43,9 @@ import {
   Building,
   AlertTriangle,
   AlertCircle,
-  XCircle,
-  X,
-  BarChart,  
-  Printer,
   Layout,
   Grid3x3,
   Edit,
-  PackageCheck,
   FileBarChart,
 } from 'lucide-react';
 
@@ -746,7 +741,7 @@ export const roleBasedMenus: RoleMenu[] = [
           {
             id: "generate-receipt",
             label: "Generate Receipt",
-            icon: Printer,
+            icon: Layout,
             path: "/cash/receipts/generate",
             description: "Create new receipts"
           },

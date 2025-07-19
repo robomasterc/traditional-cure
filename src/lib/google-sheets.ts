@@ -231,7 +231,7 @@ export class GoogleSheetsService {
     }));
   }
 
-  async getStockAdjustments(startDate?: string, endDate?: string): Promise<any[]> {
+  async getStockAdjustments(startDate?: string, endDate?: string): Promise<unknown[]> {
     const rows = await this.getRange('Orders!A2:L');
     
     // Filter for adjustment records (where supplier ID is 'ADJUSTMENT')

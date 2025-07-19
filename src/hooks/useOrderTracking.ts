@@ -78,7 +78,7 @@ export function useOrderTracking(options: UseOrderTrackingOptions = {}) {
     }
   }, [fetchOrders]);
 
-  const refreshOrder = useCallback(async (poNumber: string) => {
+  const refreshOrder = useCallback(async () => {
     try {
       setRefreshing(true);
       

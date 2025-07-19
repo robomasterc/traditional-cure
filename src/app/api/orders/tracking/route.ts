@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { poNumber, status, currentLocation, trackingNumber, carrier, notes } = body;
+    const { poNumber, status, notes } = body;
 
     if (!poNumber) {
       return NextResponse.json({ error: 'PO Number is required' }, { status: 400 });

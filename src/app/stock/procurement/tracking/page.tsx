@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,7 +79,6 @@ export default function OrderTrackingPage() {
     refreshing,
     refreshOrders,
     refreshOrder,
-    updateOrderTracking,
   } = useOrderTracking({
     status: statusFilter,
     supplierId: supplierFilter,
@@ -194,7 +193,8 @@ export default function OrderTrackingPage() {
   };
 
   const handleRefreshOrder = async (order: OrderTracking) => {
-    await refreshOrder(order.poNumber);
+    console.log('Refreshing order:', order.poNumber);
+    await refreshOrder();
   };
 
   const handleRefreshAll = async () => {

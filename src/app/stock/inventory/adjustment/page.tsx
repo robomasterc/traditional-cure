@@ -31,7 +31,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
-import { useStockAdjustments, type StockAdjustment } from '@/hooks/useStockAdjustments';
+import { useStockAdjustments } from '@/hooks/useStockAdjustments';
 import { toast } from 'sonner';
 
 export default function StockAdjustmentPage() {

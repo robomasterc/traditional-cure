@@ -73,20 +73,7 @@ export async function POST(request: NextRequest) {
     const validatedData = purchaseOrderSchema.parse(body);
 
     // Convert order data to array format for Google Sheets
-    const orderData = [
-      validatedData.id,
-      validatedData.poNumber,
-      validatedData.supplierId,
-      validatedData.supplierName,
-      validatedData.orderDate,
-      validatedData.expectedDelivery,
-      validatedData.status,
-      validatedData.totalAmount,
-      JSON.stringify(validatedData.items), // Store items as JSON string
-      validatedData.notes || '',
-      validatedData.createdBy,
-      validatedData.createdAt,
-    ];
+    // Note: We're not using orderData array as we append individual items instead
 
     //for every item in validatedData.items, append to the items sheet
     //ID	PONumber	SupplierID	OrderDate	ItemID	ItemName	Quantity	UnitPrice	Total	Notes	CreatedBy	CreatedAt

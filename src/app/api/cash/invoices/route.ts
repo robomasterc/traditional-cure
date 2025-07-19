@@ -312,6 +312,7 @@ async function createTransactionFromInvoice(invoiceId: string, patientId: string
 async function adjustInventoryByCategory(category: string, quantity: number, createdBy: string) {
   try {
     // Get current inventory
+    console.log('Adjusting inventory by category:', category, quantity, createdBy);
     const inventoryRows = await sheetsService.getRange('Inventory!A2:M');
     const inventory = inventoryRows.map((row: SheetRow) => ({
       id: row[0],

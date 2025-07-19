@@ -39,25 +39,25 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const groupBy = searchParams.get('groupBy'); // 'date' or 'medicine'
 
-    let movements: StockMovement[] = [];
+    const movements: StockMovement[] = [];
 
     // Get stock-out movements from Invoices (Medicine sales)
     try {
       const invoiceRows = await sheetsService.getRange('Invoices!A2:L');
       
-      invoiceRows.forEach((row: string[], index: number) => {
+      invoiceRows.forEach((row: string[]) => {
         const [
           invoiceId,
           patientId,
-          doctorId,
+          , // doctorId unused
           type,
           category,
           description,
           quantity,
-          amount,
-          total,
+          , // amount unused
+          , // total unused
           status,
-          createdBy,
+          , // createdBy unused
           createdAt
         ] = row;
 
@@ -78,26 +78,26 @@ export async function GET(request: NextRequest) {
           movements.push(movement);
         }
       });
-    } catch (error) {
+    } catch {
     }
 
     // Get stock-in movements from Orders (Purchases)
     try {
       const orderRows = await sheetsService.getRange('Orders!A2:L');
       
-      orderRows.forEach((row: string[], index: number) => {
+      orderRows.forEach((row: string[]) => {
         const [
           orderId,
           poNumber,
           supplierId,
-          orderDate,
+          , // orderDate unused
           itemId,
           itemName,
           quantity,
-          unitPrice,
-          total,
-          notes,
-          createdBy,
+          , // unitPrice unused
+          , // total unused
+          , // notes unused
+          , // createdBy unused
           createdAt
         ] = row;
 
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         };
         movements.push(movement);
       });
-    } catch (error) {
+    } catch {
     }
     // Filter by date range
     let filteredMovements = movements;
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     // Group by medicine if requested
     if (groupBy === 'medicine') {
-      const netMovements: NetStockMovement[] = [];
+      // const netMovements: NetStockMovement[] = [];
       const medicineMap = new Map<string, NetStockMovement>();
 
       filteredMovements.forEach(movement => {
@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
     filteredMovements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return NextResponse.json(filteredMovements);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch stock movements' }, { status: 500 });
   }
 } 
