@@ -65,12 +65,16 @@ export const useOrders = () => {
   const getOrders = async (filters?: {
     status?: string;
     supplierId?: string;
+    startDate?: string;
+    endDate?: string;
   }) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filters?.status) params.append('status', filters.status);
       if (filters?.supplierId) params.append('supplierId', filters.supplierId);
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
 
       const response = await fetch(`/api/orders?${params.toString()}`);
       
@@ -88,9 +92,21 @@ export const useOrders = () => {
     }
   };
 
+  const getOrdersByDateRange = async (startDate: string, endDate: string) => {
+    return getOrders({ startDate, endDate });
+  };
+
+  const getOrdersLast30Days = async () => {
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    return getOrders({ startDate, endDate });
+  };
+
   return {
     createOrder,
     getOrders,
+    getOrdersByDateRange,
+    getOrdersLast30Days,
     loading,
   };
 }; 

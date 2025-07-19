@@ -231,6 +231,42 @@ export class GoogleSheetsService {
     }));
   }
 
+  async getStockAdjustments(startDate?: string, endDate?: string): Promise<any[]> {
+    const rows = await this.getRange('Orders!A2:L');
+    
+    // Filter for adjustment records (where supplier ID is 'ADJUSTMENT')
+    let adjustments = rows
+      .filter(row => row[2] === 'ADJUSTMENT') // Supplier ID column
+      .map(row => ({
+        id: row[0],
+        itemId: row[4],
+        itemName: row[5],
+        quantity: Number(row[6]),
+        adjustment: row[0].startsWith('ADJ') ? -Number(row[6]) : Number(row[6]), // Negative for adjustments
+        reason: row[9]?.split(':')[0] || 'Adjustment', // Extract reason from notes
+        date: row[3],
+        adjustedBy: row[10],
+        notes: row[9]?.split(':')[1]?.trim() || '',
+        createdAt: row[11],
+      }));
+
+    // Apply date filters if provided
+    if (startDate && endDate) {
+      adjustments = adjustments.filter(adjustment => 
+        adjustment.date >= startDate && adjustment.date <= endDate
+      );
+    } else if (startDate) {
+      adjustments = adjustments.filter(adjustment => adjustment.date >= startDate);
+    } else if (endDate) {
+      adjustments = adjustments.filter(adjustment => adjustment.date <= endDate);
+    }
+
+    // Sort by date (newest first)
+    adjustments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return adjustments;
+  }
+
   async getUserRoles(email: string): Promise<UserRole[]> {
     try {
       const response = await this.sheets.spreadsheets.values.get({
