@@ -23,15 +23,12 @@ function SignInContent() {
       });      
 
       if (result?.error) {
-        console.log(result);
         console.error('Sign in error:', result.error);
         router.push(`/auth/error?error=${result.error}`);
       } else if (result?.url) {
-        console.log( "result.url", result.url);
         router.push(result.url);
       }
     } catch (error) {
-      console.log(error);
       console.error('Sign in error:', error);
       router.push('/auth/error');
     } finally {

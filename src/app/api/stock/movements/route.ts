@@ -28,12 +28,8 @@ interface NetStockMovement {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Stock Movements API called');
-    debugger; // This will pause execution in VS Code debugger
-    
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      console.log('❌ Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,19 +38,12 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const groupBy = searchParams.get('groupBy'); // 'date' or 'medicine'
-    
-    console.log('📅 Requested date:', date);
-    console.log('📅 Start date:', startDate);
-    console.log('📅 End date:', endDate);
-    console.log('📊 Group by:', groupBy);
 
     let movements: StockMovement[] = [];
 
     // Get stock-out movements from Invoices (Medicine sales)
     try {
-      console.log('📊 Fetching invoice data...');
       const invoiceRows = await sheetsService.getRange('Invoices!A2:L');
-      console.log('📋 Invoice rows found:', invoiceRows.length);
       
       invoiceRows.forEach((row: string[], index: number) => {
         const [
@@ -72,7 +61,6 @@ export async function GET(request: NextRequest) {
           createdAt
         ] = row;
 
-        console.log(`Row ${index}:`, { type, status, category, description });
 
         // Only create stock movements for Medicine items with status 'Complete'
         if (type === 'Medicine' && status === 'Complete' && category) {
@@ -88,18 +76,14 @@ export async function GET(request: NextRequest) {
             notes: `Sold to patient ${patientId}`
           };
           movements.push(movement);
-          console.log('➕ Added stock OUT movement:', movement);
         }
       });
     } catch (error) {
-      console.error('❌ Error fetching invoice movements:', error);
     }
 
     // Get stock-in movements from Orders (Purchases)
     try {
-      console.log('📦 Fetching order data...');
       const orderRows = await sheetsService.getRange('Orders!A2:L');
-      console.log('📋 Order rows found:', orderRows.length);
       
       orderRows.forEach((row: string[], index: number) => {
         const [
@@ -117,7 +101,6 @@ export async function GET(request: NextRequest) {
           createdAt
         ] = row;
 
-        console.log(`Order Row ${index}:`, { itemId, itemName, quantity });
 
         // Create stock movements for delivered orders
         // Note: We'll assume orders are delivered when created, but in a real system
@@ -134,25 +117,20 @@ export async function GET(request: NextRequest) {
           notes: `Received from supplier ${supplierId}`
         };
         movements.push(movement);
-        console.log('➕ Added stock IN movement:', movement);
       });
     } catch (error) {
-      console.error('❌ Error fetching order movements:', error);
     }
-
     // Filter by date range
     let filteredMovements = movements;
     
     if (date) {
       // Single date filter
       filteredMovements = movements.filter(movement => movement.date === date);
-      console.log(`📊 Filtered by single date ${date}: ${filteredMovements.length} movements`);
     } else if (startDate && endDate) {
       // Date range filter
       filteredMovements = movements.filter(movement => 
         movement.date >= startDate && movement.date <= endDate
       );
-      console.log(`📊 Filtered by date range ${startDate} to ${endDate}: ${filteredMovements.length} movements`);
     } else {
       // Default: last 30 months
       const thirtyMonthsAgo = new Date();
@@ -163,7 +141,6 @@ export async function GET(request: NextRequest) {
       filteredMovements = movements.filter(movement => 
         movement.date >= defaultStartDate && movement.date <= today
       );
-      console.log(`📊 Filtered by default 30-month range ${defaultStartDate} to ${today}: ${filteredMovements.length} movements`);
     }
 
     // Group by medicine if requested
@@ -215,17 +192,14 @@ export async function GET(request: NextRequest) {
         Math.abs(b.netMovement) - Math.abs(a.netMovement)
       );
 
-      console.log('✅ Returning net movements by medicine:', result.length);
       return NextResponse.json(result);
     }
 
     // Sort by date (newest first) for regular movements
     filteredMovements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    console.log('✅ Final movements count:', filteredMovements.length);
 
     return NextResponse.json(filteredMovements);
   } catch (error) {
-    console.error('💥 Error fetching stock movements:', error);
     return NextResponse.json({ error: 'Failed to fetch stock movements' }, { status: 500 });
   }
 } 

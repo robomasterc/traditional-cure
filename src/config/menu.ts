@@ -800,6 +800,13 @@ export const roleBasedMenus: RoleMenu[] = [
             description: "Complete inventory listing"
           },
           {
+            id: "low-stock",
+            label: "Low Stock",
+            icon: AlertCircle,
+            path: "/stock/alerts/low-stock",
+            description: "Items below reorder level"
+          },
+          {
             id: "add-item",
             label: "Add New Item",
             icon: Plus,
@@ -822,43 +829,43 @@ export const roleBasedMenus: RoleMenu[] = [
           }
         ]
       },
-      {
-        id: "alerts",
-        label: "Stock Alerts",
-        icon: AlertTriangle,
-        path: "/stock/alerts",
-        description: "Monitor critical stock levels",
-        subItems: [
-          {
-            id: "low-stock",
-            label: "Low Stock",
-            icon: AlertCircle,
-            path: "/stock/alerts/low-stock",
-            description: "Items below reorder level"
-          },
-          {
-            id: "out-of-stock",
-            label: "Out of Stock",
-            icon: XCircle,
-            path: "/stock/alerts/out-of-stock",
-            description: "Items completely out of stock"
-          },
-          {
-            id: "expiring-soon",
-            label: "Expiring Soon",
-            icon: Clock,
-            path: "/stock/alerts/expiring",
-            description: "Items nearing expiry date"
-          },
-          {
-            id: "expired-items",
-            label: "Expired Items",
-            icon: X,
-            path: "/stock/alerts/expired",
-            description: "Expired inventory items"
-          }
-        ]
-      },
+      // {
+      //   id: "alerts",
+      //   label: "Stock Alerts",
+      //   icon: AlertTriangle,
+      //   path: "/stock/alerts",
+      //   description: "Monitor critical stock levels",
+      //   subItems: [
+      //     {
+      //       id: "low-stock",
+      //       label: "Low Stock",
+      //       icon: AlertCircle,
+      //       path: "/stock/alerts/low-stock",
+      //       description: "Items below reorder level"
+      //     },
+      //     {
+      //       id: "out-of-stock",
+      //       label: "Out of Stock",
+      //       icon: XCircle,
+      //       path: "/stock/alerts/out-of-stock",
+      //       description: "Items completely out of stock"
+      //     },
+      //     {
+      //       id: "expiring-soon",
+      //       label: "Expiring Soon",
+      //       icon: Clock,
+      //       path: "/stock/alerts/expiring",
+      //       description: "Items nearing expiry date"
+      //     },
+      //     {
+      //       id: "expired-items",
+      //       label: "Expired Items",
+      //       icon: X,
+      //       path: "/stock/alerts/expired",
+      //       description: "Expired inventory items"
+      //     }
+      //   ]
+      // },
       {
         id: "procurement",
         label: "Procurement",
@@ -879,21 +886,21 @@ export const roleBasedMenus: RoleMenu[] = [
             icon: Truck,
             path: "/stock/procurement/tracking",
             description: "Track pending orders"
-          },
-          {
-            id: "receiving",
-            label: "Goods Receiving",
-            icon: PackageCheck,
-            path: "/stock/procurement/receiving",
-            description: "Process incoming inventory"
-          },
-          {
-            id: "procurement-analytics",
-            label: "Procurement Analytics",
-            icon: BarChart,
-            path: "/stock/procurement/analytics",
-            description: "Purchase analysis and trends"
           }
+          // {
+          //   id: "receiving",
+          //   label: "Goods Receiving",
+          //   icon: PackageCheck,
+          //   path: "/stock/procurement/receiving",
+          //   description: "Process incoming inventory"
+          // },
+          // {
+          //   id: "procurement-analytics",
+          //   label: "Procurement Analytics",
+          //   icon: BarChart,
+          //   path: "/stock/procurement/analytics",
+          //   description: "Purchase analysis and trends"
+          // }
         ]
       },
       {
@@ -932,7 +939,7 @@ export const roleBasedMenus: RoleMenu[] = [
           //   description: "Compare supplier pricing"
           // }
         ]
-      },
+      }
       // {
       //   id: "quality",
       //   label: "Quality Control",
@@ -970,43 +977,43 @@ export const roleBasedMenus: RoleMenu[] = [
       //     }
       //   ]
       // },
-      {
-        id: "reports",
-        label: "Inventory Reports",
-        icon: FileSpreadsheet,
-        path: "/stock/reports",
-        description: "Comprehensive inventory reporting",
-        subItems: [
-          {
-            id: "stock-report",
-            label: "Stock Report",
-            icon: Package,
-            path: "/stock/reports/stock",
-            description: "Current stock status report"
-          },
-          {
-            id: "valuation-report",
-            label: "Valuation Report",
-            icon: DollarSign,
-            path: "/stock/reports/valuation",
-            description: "Inventory valuation analysis"
-          },
-          {
-            id: "movement-report",
-            label: "Movement Report",
-            icon: Activity,
-            path: "/stock/reports/movement",
-            description: "Stock movement analysis"
-          },
-          {
-            id: "abc-analysis",
-            label: "ABC Analysis",
-            icon: TrendingUp,
-            path: "/stock/reports/abc",
-            description: "ABC classification analysis"
-          }
-        ]
-      }
+      // {
+      //   id: "reports",
+      //   label: "Inventory Reports",
+      //   icon: FileSpreadsheet,
+      //   path: "/stock/reports",
+      //   description: "Comprehensive inventory reporting",
+      //   subItems: [
+      //     {
+      //       id: "stock-report",
+      //       label: "Stock Report",
+      //       icon: Package,
+      //       path: "/stock/reports/stock",
+      //       description: "Current stock status report"
+      //     },
+      //     {
+      //       id: "valuation-report",
+      //       label: "Valuation Report",
+      //       icon: DollarSign,
+      //       path: "/stock/reports/valuation",
+      //       description: "Inventory valuation analysis"
+      //     },
+      //     {
+      //       id: "movement-report",
+      //       label: "Movement Report",
+      //       icon: Activity,
+      //       path: "/stock/reports/movement",
+      //       description: "Stock movement analysis"
+      //     },
+      //     {
+      //       id: "abc-analysis",
+      //       label: "ABC Analysis",
+      //       icon: TrendingUp,
+      //       path: "/stock/reports/abc",
+      //       description: "ABC classification analysis"
+      //     }
+      //   ]
+      // }
     ]
   }
 ];

@@ -232,26 +232,10 @@ export class GoogleSheetsService {
   }
 
   async getUserRoles(email: string): Promise<UserRole[]> {
-    console.log('=== Google Sheets Integration ===');
-    console.log('Environment:', {
-      hasServiceAccountEmail: !!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      hasPrivateKey: !!process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
-      hasSheetsId: !!SPREADSHEET_ID,
-    });
-
     try {
-      console.log('🔍 Fetching roles for email:', email);
-      console.log('ROLES_SHEET_NAME', ROLES_SHEET_NAME);
-      console.log('SPREADSHEET_ID', SPREADSHEET_ID);
-      
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
         range: `${ROLES_SHEET_NAME}!A:B`,
-      });
-
-      console.log('📊 Sheet response:', {
-        hasValues: !!response.data.values,
-        rowCount: response.data.values?.length || 0,
       });
 
       const rows = response.data.values;
@@ -274,8 +258,6 @@ export class GoogleSheetsService {
       const validRoles = roles.filter((role: string): role is UserRole => 
         VALID_ROLES.includes(role as UserRole)
       );
-
-      console.log('✅ Valid roles:', validRoles);
 
       if (validRoles.length === 0) {
         console.error('❌ No valid roles found for email:', email);

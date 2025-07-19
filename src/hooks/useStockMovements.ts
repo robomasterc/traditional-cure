@@ -38,8 +38,6 @@ export function useStockMovements() {
   const [viewMode, setViewMode] = useState<'date' | 'medicine'>('date');
 
   const fetchMovements = useCallback(async (params: StockMovementsParams = {}) => {
-    debugger; // This will pause execution in browser dev tools
-    
     setLoading(true);
     setError(null);
     
@@ -82,7 +80,6 @@ export function useStockMovements() {
   }, []); // Empty dependency array - function will be stable
 
   const getMovementsByDate = useCallback((date: string) => {
-    debugger; // Breakpoint for date changes
     return fetchMovements({ date, groupBy: 'date' });
   }, [fetchMovements]);
 
@@ -134,31 +131,6 @@ export function useStockMovements() {
     }
   }, [movements, netMovements, viewMode]);
 
-  // Debug function to log current state
-  const debugState = useCallback(() => {
-    console.group('🔍 useStockMovements Debug State');
-    console.log('Loading:', loading);
-    console.log('Error:', error);
-    console.log('View Mode:', viewMode);
-    console.log('Movements count:', movements.length);
-    console.log('Net Movements count:', netMovements.length);
-    console.log('Movements:', movements);
-    console.log('Net Movements:', netMovements);
-    console.table(viewMode === 'medicine' ? netMovements : movements);
-    console.groupEnd();
-  }, [loading, error, movements, netMovements, viewMode]);
-
-  // Auto-debug on state changes
-  useEffect(() => {
-    console.log('🔄 useStockMovements state changed:', {
-      loading,
-      error: error ? 'Has error' : 'No error',
-      movementsCount: movements.length,
-      netMovementsCount: netMovements.length,
-      viewMode
-    });
-  }, [loading, error, movements, netMovements, viewMode]);
-
   return {
     movements,
     netMovements,
@@ -172,7 +144,6 @@ export function useStockMovements() {
     getTodayMovements,
     getLast1MonthsNetMovements,
     getSummary,
-    debugState,
     setViewMode
   };
 } 

@@ -349,10 +349,10 @@ async function adjustInventoryByCategory(category: string, quantity: number, cre
         const updatedAtRange = `Inventory!M${inventoryRowIndex + 2}`; // UpdatedAt column (M)
         await sheetsService.updateRow(updatedAtRange, [new Date().toISOString()]);
         
-        console.log(`Updated inventory for ${inventoryItem.name}: ${inventoryItem.stock} -> ${newStock} (sold ${quantity})`);
+        // Inventory updated successfully
       }
     } else {
-      console.log(`Inventory item not found for ID: ${category}`);
+      // Inventory item not found
     }
   } catch (error) {
     console.error('Error adjusting inventory by category:', error);
@@ -367,7 +367,6 @@ async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: A
     const transactionRows = rows.filter((row: SheetRow) => row[0] === `Inv-${invoiceId}`);
     
     if (transactionRows.length === 0) {
-      console.log('No items found for invoice:', `Inv-${invoiceId}`);
       return;
     }
 
@@ -399,7 +398,6 @@ async function updateTransactionFromInvoice(invoiceId: string, paymentMethods: A
     );
 
     if (transactionRowIndex === -1) {
-      console.log('No existing transaction found for invoice:', invoiceId);
       return;
     }
 

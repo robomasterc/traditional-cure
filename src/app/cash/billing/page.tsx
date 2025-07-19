@@ -107,7 +107,6 @@ export default function BillingPage() {
       total: item.total
     })) || [];
     
-    console.log("Edit items:", editItems);
     
     setEditingInvoice({
       id: invoice.id,
@@ -135,7 +134,6 @@ export default function BillingPage() {
       total: item.total
     })) || [];
     
-    console.log("View items:", viewItems);
     
     setEditingInvoice({
       id: invoice.id,

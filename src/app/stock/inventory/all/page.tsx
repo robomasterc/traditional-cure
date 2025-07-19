@@ -125,7 +125,6 @@ export default function AllInventoryPage() {
     
     try {
       // TODO: Implement delete API call
-      console.log('Deleting item:', selectedItem.id);
       // await deleteInventoryItem(selectedItem.id);
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
@@ -576,7 +575,6 @@ export default function AllInventoryPage() {
                         updatedAt: new Date().toISOString(),
                       };
 
-                      console.log('Sending update data:', updateData);
 
                       const response = await fetch('/api/inventory', {
                         method: 'PUT',

@@ -18,7 +18,6 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 const generateId = (prefix: string) => {
   const id = `${prefix}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-  console.log(`Generated ID for ${prefix}:`, id);
   return id;
 };
 
@@ -32,7 +31,6 @@ const generatePatients = (count: number): Patient[] => {
   for (let i = 0; i < count; i++) {
     const createdAt = randomDate(new Date('2023-01-01'), new Date());
     const patientId = generateId('PAT');
-    console.log(`Creating patient with ID:`, patientId);
     patients.push({
       id: patientId,
       name: names[i % names.length],
@@ -219,8 +217,6 @@ async function initializeSheets() {
 
     for (const { name, data } of requests) {
       const columns = SHEET_COLUMNS[name as keyof typeof SHEET_COLUMNS];
-      console.log(`\nProcessing sheet: ${name}`);
-      console.log('Columns:', columns);
       
       const values = [
         columns,
@@ -236,12 +232,9 @@ async function initializeSheets() {
             }
             return value && typeof value === 'object' && 'toISOString' in value ? (value as Date).toISOString() : value;
           });
-          console.log(`Row data for ${name}:`, row);
           return row;
         })
       ];
-
-      console.log(`\nWriting to ${name}:`, values[1]);
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
@@ -250,8 +243,6 @@ async function initializeSheets() {
         requestBody: { values: values as string[][] },
       });
     }
-
-    console.log('Sheets initialized successfully!');
   } catch (error) {
     console.error('Error initializing sheets:', error);
     throw error;

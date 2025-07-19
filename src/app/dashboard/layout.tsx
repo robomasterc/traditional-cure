@@ -33,7 +33,6 @@ export default function DashboardLayout() {
 
   const userRoles = (session as { roles?: UserRole[] }).roles || [];
   const userName = session.user.name || 'User';
-  console.log("userRoles", userRoles);
   
   return (
     <TabProvider>

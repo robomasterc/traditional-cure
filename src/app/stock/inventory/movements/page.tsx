@@ -41,12 +41,13 @@ export default function StockMovementsPage() {
   const [dateFilter, setDateFilter] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'date' | 'medicine'>('medicine');
   const initialLoadDone = useRef(false);
 
   const { 
     movements, 
     netMovements,
+    viewMode,
+    setViewMode,
     loading, 
     error, 
     fetchMovements, 
@@ -54,8 +55,7 @@ export default function StockMovementsPage() {
     getMovementsByDateRange,
     getNetMovementsByMedicine,
     getLast1MonthsNetMovements,
-    getSummary,
-    debugState 
+    getSummary
   } = useStockMovements();
 
   // Set default date range (last 30 months) and fetch net movements by medicine
@@ -144,7 +144,6 @@ export default function StockMovementsPage() {
   };
 
   const handleDateChange = (newDate: string) => {
-    debugger; // This will pause execution in browser dev tools
     setDateFilter(newDate);
     getMovementsByDate(newDate);
     setViewMode('date');
@@ -184,10 +183,6 @@ export default function StockMovementsPage() {
     setDateFilter(today);
     getMovementsByDate(today);
     setViewMode('date');
-  };
-
-  const handleDebugClick = () => {
-    debugState(); // Call the debug function from the hook
   };
 
   const summary = getSummary();

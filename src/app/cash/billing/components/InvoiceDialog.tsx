@@ -190,8 +190,6 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
         const consultationItems = items.filter(item => item.type === 'Consultation');
         const otherItems = items.filter(item => item.type !== 'Consultation');
         
-        console.log("Edit mode - Consultation items:", consultationItems);
-        console.log("Edit mode - Other items:", otherItems);      
                 
         // Append other items with POST
         if (otherItems.length > 0) {
@@ -237,7 +235,6 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
         toast.success('Invoice updated successfully');
       } else {
         // Create new invoice
-        console.log("Submitting items:", items);
         
         // Filter out items with missing required fields
         const validItems = items.filter(item => 
@@ -249,7 +246,6 @@ export default function InvoiceDialog({ isOpen, onClose, onSuccess, editData, ed
           item.amount > 0
         );
         
-        console.log("Valid items to submit:", validItems);
         
         if (validItems.length === 0) {
           throw new Error('Please fill in all required fields for at least one item');
