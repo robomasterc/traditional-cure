@@ -5,10 +5,11 @@ export interface Patient {
   gender: 'Male' | 'Female' | 'Other';
   phone: string;
   email?: string;
-  address: string;
-  medicalHistory: string;
-  allergies: string;
-  emergencyContact: string;
+  district: string;
+  state: string;
+  occupation: string;
+  allergies?: string;
+  emergencyContact?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,7 +64,7 @@ export interface InventoryItem {
 export interface Staff {
   id: string;
   name: string;
-  role: 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'stock_manager';
+  role: 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'stock_manager' | 'case_manager';
   email: string;
   phone: string;
   salary: number;

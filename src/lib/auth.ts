@@ -22,6 +22,7 @@ export const rolePermissions: Record<UserRole, UserRole[]> = {
   doctor: ["doctor", "pharmacist", "stock_manager"],
   pharmacist: ["pharmacist", "stock_manager"],
   cash_manager: ["cash_manager"],
+  case_manager: ["case_manager"],
   stock_manager: ["stock_manager"],
 };
 

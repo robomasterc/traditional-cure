@@ -38,9 +38,10 @@ const generatePatients = (count: number): Patient[] => {
       gender: ['Male', 'Female', 'Other'][Math.floor(Math.random() * 3)] as 'Male' | 'Female' | 'Other',
       phone: `+91-${Math.floor(Math.random() * 9000000000) + 1000000000}`,
       email: `patient${i + 1}@example.com`,
-      address: addresses[i % addresses.length],
+      district: ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata'][i % 5],
+      state: ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'West Bengal'][i % 5],
       medicalHistory: 'Hypertension, Diabetes Type 2',
-      allergies: 'Penicillin, Shellfish',
+      occupation: ['Engineer', 'Teacher', 'Doctor', 'Business', 'Student'][i % 5],
       emergencyContact: `+91-${Math.floor(Math.random() * 9000000000) + 1000000000}`,
       createdAt,
       updatedAt: createdAt

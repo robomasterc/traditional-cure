@@ -114,20 +114,21 @@ export class GoogleSheetsService {
 
   // Type-specific methods
   async getPatients(): Promise<Patient[]> {
-    const rows = await this.getRange('Patients!A2:L');
+    const rows = await this.getRange('Patients!A2:M');
     return rows.map(row => ({
       id: row[0],
       name: row[1],
       age: Number(row[2]),
       gender: row[3] as 'Male' | 'Female' | 'Other',
       phone: row[4],
-      email: row[5],
-      address: row[6],
-      medicalHistory: row[7],
-      allergies: row[8],
-      emergencyContact: row[9],
-      createdAt: new Date(row[10]),
-      updatedAt: new Date(row[11])
+      email: row[5] || undefined,
+      district: row[6],
+      state: row[7],
+      occupation: row[8],
+      allergies: row[9] || undefined,
+      emergencyContact: row[10] || undefined,
+      createdAt: new Date(row[11]),
+      updatedAt: new Date(row[12])
     }));
   }
 
@@ -190,7 +191,7 @@ export class GoogleSheetsService {
     return rows.map(row => ({
       id: row[0],
       name: row[1],
-      role: row[2] as 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'stock_manager',
+      role: row[2] as 'admin' | 'doctor' | 'pharmacist' | 'cash_manager' | 'case_manager' | 'stock_manager',
       email: row[3],
       phone: row[4],
       salary: Number(row[5]),
@@ -317,7 +318,7 @@ export class GoogleSheetsService {
   }
 }
 
-const VALID_ROLES: UserRole[] = ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager'];
+const VALID_ROLES: UserRole[] = ['admin', 'doctor', 'pharmacist', 'cash_manager', 'stock_manager', 'case_manager'];
 
 const sheetsService = new GoogleSheetsService(process.env.GOOGLE_SHEETS_ID!);
 

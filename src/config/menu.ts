@@ -1,6 +1,5 @@
 import { CircleUserRound, LucideIcon } from 'lucide-react';
 import {
-  TrendingUp,
   FileText,
   Users,
   UserPlus,
@@ -16,21 +15,12 @@ import {
   ShoppingCart,
   Shield,
   Stethoscope,
-  UserCheck,
   Calendar,
   History,
-  RotateCcw,
   Search,
-  Activity,
   Pill,
   Plus,
   Archive,
-  Heart,
-  Waves,
-  Leaf,
-  BookOpen,
-  Flower,
-  Compass,
   ClipboardList,
   Loader,
   CheckCircle2,
@@ -246,167 +236,209 @@ export const roleBasedMenus: RoleMenu[] = [
   // ============================================================================
   // DOCTOR ROLE - Clinical Operations Focus
   // ============================================================================
+  // {
+  //   role: "doctor",
+  //   displayName: "Doctor",
+  //   primaryColor: "#10B981", // Emerald
+  //   icon: Stethoscope,
+  //   menuItems: [
+  //     // {
+  //     //   id: "dashboard",
+  //     //   label: "Clinical Dashboard",
+  //     //   icon: Stethoscope,
+  //     //   path: "/doctor/dashboard",
+  //     //   description: "Today's appointments and clinical overview"
+  //     // },
+  //     // {
+  //     //   id: "consultations",
+  //     //   label: "Consultations",
+  //     //   icon: UserCheck,
+  //     //   path: "/doctor/consultations",
+  //     //   description: "Patient consultations and examinations",
+  //     //   subItems: [
+  //     //     {
+  //     //       id: "today-appointments",
+  //     //       label: "Today's Appointments",
+  //     //       icon: Calendar,
+  //     //       path: "/doctor/consultations/today",
+  //     //       description: "Scheduled appointments for today"
+  //     //     },
+  //     //     {
+  //     //       id: "consultation-history",
+  //     //       label: "Consultation History",
+  //     //       icon: History,
+  //     //       path: "/doctor/consultations/history",
+  //     //       description: "Past consultation records"
+  //     //     },
+  //     //     {
+  //     //       id: "follow-ups",
+  //     //       label: "Follow-ups",
+  //     //       icon: RotateCcw,
+  //     //       path: "/doctor/consultations/follow-ups",
+  //     //       description: "Patients due for follow-up"
+  //     //     }
+  //     //   ]
+  //     // },
+  //     // {
+  //     //   id: "patients",
+  //     //   label: "My Patients",
+  //     //   icon: Users,
+  //     //   path: "/patients/list",
+  //     //   description: "Patients under your care",
+  //     //   subItems: [
+  //     //     {
+  //     //       id: "patient-list",
+  //     //       label: "All Patients",
+  //     //       icon: Users,
+  //     //       path: "/patients/list",
+  //     //       description: "View and manage all patient records"
+  //     //     },
+  //     //     {
+  //     //       id: "patient-register",
+  //     //       label: "Register Patient",
+  //     //       icon: UserPlus,
+  //     //       path: "/patients/register",
+  //     //       description: "Add new patients to the system"
+  //     //     },
+  //     //     {
+  //     //       id: "patient-search",
+  //     //       label: "Search Patients",
+  //     //       icon: Search,
+  //     //       path: "/patients/list",
+  //     //       description: "Find patient records quickly"
+  //     //     }
+  //     //   ]
+  //     // },
+  //     // {
+  //     //   id: "prescriptions",
+  //     //   label: "Prescriptions",
+  //     //   icon: Pill,
+  //     //   path: "/doctor/prescriptions",
+  //     //   description: "Create and manage prescriptions",
+  //     //   subItems: [
+  //     //     {
+  //     //       id: "create-prescription",
+  //     //       label: "New Prescription",
+  //     //       icon: Plus,
+  //     //       path: "/doctor/prescriptions/create",
+  //     //       description: "Create new herbal prescriptions"
+  //     //     },
+  //     //     {
+  //     //       id: "prescription-templates",
+  //     //       label: "Templates",
+  //     //       icon: FileText,
+  //     //       path: "/doctor/prescriptions/templates",
+  //     //       description: "Common prescription templates"
+  //     //     },
+  //     //     {
+  //     //       id: "prescription-history",
+  //     //       label: "Prescription History",
+  //     //       icon: Archive,
+  //     //       path: "/doctor/prescriptions/history",
+  //     //       description: "Previously issued prescriptions"
+  //     //     }
+  //     //   ]
+  //     // },
+  //     // {
+  //     //   id: "treatments",
+  //     //   label: "Treatment Plans",
+  //     //   icon: Heart,
+  //     //   path: "/doctor/treatments",
+  //     //   description: "Manage treatment protocols",
+  //     //   subItems: [
+  //     //     {
+  //     //       id: "panchakarma",
+  //     //       label: "Panchakarma",
+  //     //       icon: Waves,
+  //     //       path: "/doctor/treatments/panchakarma",
+  //     //       description: "Panchakarma therapy management"
+  //     //     },
+  //     //     {
+  //     //       id: "ayurvedic-protocols",
+  //     //       label: "Ayurvedic Protocols",
+  //     //       icon: Leaf,
+  //     //       path: "/doctor/treatments/protocols",
+  //     //       description: "Traditional treatment protocols"
+  //     //     },
+  //     //     {
+  //     //       id: "progress-tracking",
+  //     //       label: "Progress Tracking",
+  //     //       icon: TrendingUp,
+  //     //       path: "/doctor/treatments/progress",
+  //     //       description: "Monitor patient progress"
+  //     //     }
+  //     //   ]
+  //     // },
+  //     // {
+  //     //   id: "knowledge",
+  //     //   label: "Knowledge Base",
+  //     //   icon: BookOpen,
+  //     //   path: "/doctor/knowledge",
+  //     //   description: "Medical references and resources",
+  //     //   subItems: [
+  //     //     {
+  //     //       id: "herb-database",
+  //     //       label: "Herb Database",
+  //     //       icon: Flower,
+  //     //       path: "/doctor/knowledge/herbs",
+  //     //       description: "Comprehensive herb information"
+  //     //     },
+  //     //     {
+  //     //       id: "dosha-guide",
+  //     //       label: "Dosha Guide",
+  //     //       icon: Compass,
+  //     //       path: "/doctor/knowledge/doshas",
+  //     //       description: "Dosha assessment guidelines"
+  //     //     },
+  //     //     {
+  //     //       id: "pulse-reference",
+  //     //       label: "Pulse Diagnosis",
+  //     //       icon: Activity,
+  //     //       path: "/doctor/knowledge/pulse",
+  //     //       description: "Pulse reading reference guide"
+  //     //     }
+  //     //   ]
+  //     // }
+  //   ]
+  // },
+
+  // ============================================================================
+  // CASE MANAGER - Clinical Operations Focus
+  // ============================================================================
   {
-    role: "doctor",
-    displayName: "Doctor",
+    role: "case_manager",
+    displayName: "Case Manager",
     primaryColor: "#10B981", // Emerald
     icon: Stethoscope,
-    menuItems: [
-      {
-        id: "dashboard",
-        label: "Clinical Dashboard",
-        icon: Stethoscope,
-        path: "/doctor/dashboard",
-        description: "Today's appointments and clinical overview"
-      },
-      {
-        id: "consultations",
-        label: "Consultations",
-        icon: UserCheck,
-        path: "/doctor/consultations",
-        description: "Patient consultations and examinations",
-        subItems: [
-          {
-            id: "today-appointments",
-            label: "Today's Appointments",
-            icon: Calendar,
-            path: "/doctor/consultations/today",
-            description: "Scheduled appointments for today"
-          },
-          {
-            id: "consultation-history",
-            label: "Consultation History",
-            icon: History,
-            path: "/doctor/consultations/history",
-            description: "Past consultation records"
-          },
-          {
-            id: "follow-ups",
-            label: "Follow-ups",
-            icon: RotateCcw,
-            path: "/doctor/consultations/follow-ups",
-            description: "Patients due for follow-up"
-          }
-        ]
-      },
+    menuItems: [      
       {
         id: "patients",
         label: "My Patients",
         icon: Users,
-        path: "/doctor/patients",
+        path: "/patients/list",
         description: "Patients under your care",
         subItems: [
           {
-            id: "active-patients",
-            label: "Active Patients",
-            icon: UserCheck,
-            path: "/doctor/patients/active",
-            description: "Currently treating patients"
+            id: "patient-list",
+            label: "All Patients",
+            icon: Users,
+            path: "/patients/list",
+            description: "View and manage all patient records"
           },
           {
-            id: "patient-search",
-            label: "Search Patients",
-            icon: Search,
-            path: "/doctor/patients/search",
-            description: "Find patient records quickly"
-          },
-          {
-            id: "treatment-outcomes",
-            label: "Treatment Outcomes",
-            icon: Activity,
-            path: "/doctor/patients/outcomes",
-            description: "Track treatment effectiveness"
+            id: "patient-register",
+            label: "Register Patient",
+            icon: UserPlus,
+            path: "/patients/register",
+            description: "Add new patients to the system"
           }
-        ]
-      },
-      {
-        id: "prescriptions",
-        label: "Prescriptions",
-        icon: Pill,
-        path: "/doctor/prescriptions",
-        description: "Create and manage prescriptions",
-        subItems: [
-          {
-            id: "create-prescription",
-            label: "New Prescription",
-            icon: Plus,
-            path: "/doctor/prescriptions/create",
-            description: "Create new herbal prescriptions"
-          },
-          {
-            id: "prescription-templates",
-            label: "Templates",
-            icon: FileText,
-            path: "/doctor/prescriptions/templates",
-            description: "Common prescription templates"
-          },
-          {
-            id: "prescription-history",
-            label: "Prescription History",
-            icon: Archive,
-            path: "/doctor/prescriptions/history",
-            description: "Previously issued prescriptions"
-          }
-        ]
-      },
-      {
-        id: "treatments",
-        label: "Treatment Plans",
-        icon: Heart,
-        path: "/doctor/treatments",
-        description: "Manage treatment protocols",
-        subItems: [
-          {
-            id: "panchakarma",
-            label: "Panchakarma",
-            icon: Waves,
-            path: "/doctor/treatments/panchakarma",
-            description: "Panchakarma therapy management"
-          },
-          {
-            id: "ayurvedic-protocols",
-            label: "Ayurvedic Protocols",
-            icon: Leaf,
-            path: "/doctor/treatments/protocols",
-            description: "Traditional treatment protocols"
-          },
-          {
-            id: "progress-tracking",
-            label: "Progress Tracking",
-            icon: TrendingUp,
-            path: "/doctor/treatments/progress",
-            description: "Monitor patient progress"
-          }
-        ]
-      },
-      {
-        id: "knowledge",
-        label: "Knowledge Base",
-        icon: BookOpen,
-        path: "/doctor/knowledge",
-        description: "Medical references and resources",
-        subItems: [
-          {
-            id: "herb-database",
-            label: "Herb Database",
-            icon: Flower,
-            path: "/doctor/knowledge/herbs",
-            description: "Comprehensive herb information"
-          },
-          {
-            id: "dosha-guide",
-            label: "Dosha Guide",
-            icon: Compass,
-            path: "/doctor/knowledge/doshas",
-            description: "Dosha assessment guidelines"
-          },
-          {
-            id: "pulse-reference",
-            label: "Pulse Diagnosis",
-            icon: Activity,
-            path: "/doctor/knowledge/pulse",
-            description: "Pulse reading reference guide"
-          }
+          // {
+          //   id: "patient-search",
+          //   label: "Search Patients",
+          //   icon: Search,
+          //   path: "/patients/list",
+          //   description: "Find patient records quickly"
+          // }
         ]
       }
     ]
@@ -877,7 +909,7 @@ export const roleBasedMenus: RoleMenu[] = [
           },
           {
             id: "order-tracking",
-            label: "Order Tracking",
+            label: "Orders",
             icon: Truck,
             path: "/stock/procurement/tracking",
             description: "Track pending orders"

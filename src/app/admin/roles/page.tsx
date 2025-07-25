@@ -17,6 +17,7 @@ const availableRoles = [
   { id: 'doctor', label: 'Doctor' },
   { id: 'pharmacist', label: 'Pharmacist' },
   { id: 'cash_manager', label: 'Cash Manager' },
+  { id: 'case_manager', label: 'Case Manager' },
   { id: 'stock_manager', label: 'Stock Manager' },
 ];
 

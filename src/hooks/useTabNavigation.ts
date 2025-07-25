@@ -35,6 +35,8 @@ export function useTabNavigation() {
         '/stock/reports/valuation': () => import('@/app/stock/reports/valuation/page'),
         '/stock/reports/movement': () => import('@/app/stock/reports/movement/page'),
         '/stock/reports/abc': () => import('@/app/stock/reports/abc/page'),
+        '/patients/list': () => import('@/app/patients/list/page'),
+        '/patients/register': () => import('@/app/patients/register/page'),
       };
 
       const importFn = componentMap[path];

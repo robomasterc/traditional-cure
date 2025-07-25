@@ -8,6 +8,7 @@ const roleBasedAccess = {
   '/doctor': ['admin', 'doctor'],
   '/pharmacy': ['admin', 'doctor', 'pharmacist'],
   '/cash': ['admin', 'cash_manager'],
+  '/patients': ['admin', 'case_manager'],
   '/stock': ['admin', 'doctor', 'pharmacist', 'stock_manager'],
 };
 
