@@ -224,7 +224,7 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
             </div>
             
             <div className="flex gap-4">
-              <div className="w-48">
+              <div className="w-Auto">
                 <Select value={genderFilter} onValueChange={setGenderFilter}>
                   <SelectTrigger className="bg-white border-gray-300 hover:border-gray-400 focus:border-blue-500">
                     <Filter className="h-4 w-4 mr-2" />
@@ -239,15 +239,15 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                 </Select>
               </div>
 
-              <div className="w-32">
+              <div className="w-Auto">
                 <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
                   <SelectTrigger className="bg-white border-gray-300 hover:border-gray-400 focus:border-blue-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-300 text-gray-700">
-                    <SelectItem value="10">10 per page</SelectItem>
-                    <SelectItem value="50">50 per page</SelectItem>
-                    <SelectItem value="100">100 per page</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="50">50page</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -592,8 +592,8 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                   <h2 className="text-2xl font-bold">{selectedPatient.name}</h2>
                   <div className="flex items-center space-x-2 mt-1">
                     <Badge>{selectedPatient.age} years</Badge>
-                    <Badge variant="outline">{selectedPatient.gender}</Badge>
-                    <Badge variant="secondary">{getAgeGroup(selectedPatient.age)}</Badge>
+                    <Badge variant="secondary">{selectedPatient.gender}</Badge>
+                    <Badge variant="outline">{getAgeGroup(selectedPatient.age)}</Badge>
                   </div>
                 </div>
               </div>
