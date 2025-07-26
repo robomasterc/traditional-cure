@@ -3,6 +3,8 @@ import { Button } from './button';
 import { Container } from './container';
 import Link from 'next/link';
 import { cn } from '../../lib/utils';
+import { getSignInUrl } from '@/lib/auth-utils';
+import { SignOutButton } from '@/components/auth/sign-out-button';
 
 interface HeaderProps {
   variant?: 'default' | 'transparent';
@@ -28,7 +30,7 @@ export function Header({
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Typography variant="h4" className="text-gray-900">
-              Happy n Healthy
+              Health and Wellness
             </Typography>
           </div>
           
@@ -46,19 +48,15 @@ export function Header({
             
             {showAuth ? (
               <>
-                <Link href="/auth/signin">
+                <Link href={getSignInUrl()}>
                   <Button variant="outline">Sign In</Button>
                 </Link>
-                <Link href="/auth/signin">
+                <Link href={getSignInUrl()}>
                   <Button>Get Started</Button>
                 </Link>
               </>
             ) : (
-              <Link href="/auth/signout">
-                <Button variant="outline" size="sm">
-                  Sign Out
-                </Button>
-              </Link>
+              <SignOutButton />
             )}
           </div>
         </div>

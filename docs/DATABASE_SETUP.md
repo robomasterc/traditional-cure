@@ -133,7 +133,53 @@ Currently, there's no automatic migration between providers. If you need to migr
 2. Transform the data format if needed
 3. Import into the new provider
 
+## Authentication Flow Testing
+
+### Testing Both Providers
+
+The application automatically routes to the appropriate sign-in page based on your `DATABASE_PROVIDER` setting:
+
+1. **SQLite Provider**: All "Sign In" and "Get Started" buttons redirect to `/auth/signin-sqlite`
+2. **Google Sheets Provider**: All buttons redirect to `/auth/signin`
+
+### Sign-Out Functionality
+
+Sign-out works seamlessly for both providers:
+- Uses NextAuth's `signOut()` function
+- Clears session data regardless of provider
+- Redirects to the home page after sign-out
+
+### Testing Steps
+
+1. **Test SQLite Authentication**:
+   ```bash
+   # Set environment
+   DATABASE_PROVIDER=sqlite
+   npm run init-sqlite
+   npm run dev
+   ```
+   - Visit `http://localhost:3000`
+   - Click "Get Started" → should go to `/auth/signin-sqlite`
+   - Sign in with admin credentials
+   - Verify sign-out works
+
+2. **Test Google Sheets Authentication**:
+   ```bash
+   # Set environment
+   DATABASE_PROVIDER=googlesheets
+   npm run dev
+   ```
+   - Visit `http://localhost:3000`
+   - Click "Get Started" → should go to `/auth/signin`
+   - Sign in with Google OAuth
+   - Verify sign-out works
+
 ## Troubleshooting
+
+### Authentication Issues
+- Verify `DATABASE_PROVIDER` environment variable is set correctly
+- Check that the appropriate authentication configuration is complete
+- Ensure the middleware includes both sign-in routes as public
 
 ### SQLite Issues
 - Ensure the database file path is writable

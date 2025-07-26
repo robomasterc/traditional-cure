@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { getSignInUrl } from '@/lib/auth-utils';
 
 function AuthErrorContent() {
   const searchParams = useSearchParams();
@@ -38,7 +39,7 @@ function AuthErrorContent() {
         </div>
 
         <div className="mt-8 space-y-4">
-          <Link href="/auth/signin" className="block w-full">
+          <Link href={getSignInUrl()} className="block w-full">
             <Button className="w-full" size="lg">
               Return to Sign In
             </Button>

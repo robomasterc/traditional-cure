@@ -3,6 +3,7 @@ import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { User, Package, Pill, DollarSign } from 'lucide-react';
 import { Header } from '@/components/ui/header';
+import { getSignInUrl } from '@/lib/auth-utils';
 
 const features = [
   {
@@ -78,7 +79,7 @@ export default function HomePage() {
                 </Typography>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
-                    <Link href="/auth/signin">
+                    <Link href={getSignInUrl()}>
                       <Button size="lg" className="w-full">
                         Get Started
                       </Button>
@@ -139,7 +140,7 @@ export default function HomePage() {
           </Typography>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
-              <Link href="/auth/signin">
+              <Link href={getSignInUrl()}>
                 <Button size="lg">
                   Get Started
                 </Button>

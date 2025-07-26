@@ -31,9 +31,9 @@ export default function SQLiteSignIn() {
         setError('Invalid email or password');
       } else {
         // Check if sign in was successful
-        const session = await getSession();
+        const session = await getSession();        
         if (session) {
-          router.push('/');
+          router.push('/dashboard'); // Redirect to dashboard on successful sign in
         } else {
           setError('Sign in failed');
         }

@@ -16,6 +16,7 @@ const roleBasedAccess = {
 const publicRoutes = [
   '/',
   '/auth/signin',
+  '/auth/signin-sqlite',
   '/auth/error',
   '/unauthorized',
   '/dashboard/test',
@@ -33,7 +34,11 @@ export default async function middleware(request: NextRequestWithAuth) {
 
   // Check if user is authenticated
   if (!token) {
-    const url = new URL('/auth/signin', request.url);
+    // Determine sign-in URL based on DATABASE_PROVIDER environment variable
+    const databaseProvider = process.env.DATABASE_PROVIDER || 'googlesheets';
+    const signInPath = databaseProvider === 'sqlite' ? '/auth/signin-sqlite' : '/auth/signin';
+    
+    const url = new URL(signInPath, request.url);
     url.searchParams.set('callbackUrl', encodeURI(request.url));
     return NextResponse.redirect(url);
   }
