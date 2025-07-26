@@ -1,7 +1,9 @@
 import { DefaultSession, NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { getUserRoles } from './google-sheets';
+import { getUserRoles } from './data-service';
 import { UserRole } from '@/types/auth';
+import { getDatabaseConfig, isGoogleSheetsProvider } from '@/config/database';
+import { sqliteAuthOptions } from './auth-sqlite';
 
 
 declare module "next-auth" {
@@ -26,7 +28,7 @@ export const rolePermissions: Record<UserRole, UserRole[]> = {
   stock_manager: ["stock_manager"],
 };
 
-export const authOptions: NextAuthOptions = {  
+const googleSheetsAuthOptions: NextAuthOptions = {  
   providers: [
     GoogleProvider({      
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -145,4 +147,8 @@ export const authOptions: NextAuthOptions = {
       });
     },
   },
-}; 
+};
+
+export const authOptions: NextAuthOptions = isGoogleSheetsProvider() 
+  ? googleSheetsAuthOptions 
+  : sqliteAuthOptions; 

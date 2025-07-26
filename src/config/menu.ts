@@ -725,7 +725,7 @@ export const roleBasedMenus: RoleMenu[] = [
         //     description: "View all transaction records"
         //   }
         // ]
-      },
+      }
       // {
       //   id: "payments",
       //   label: "Payment Methods",
@@ -763,36 +763,36 @@ export const roleBasedMenus: RoleMenu[] = [
       //     }
       //   ]
       // },
-      {
-        id: "receipts",
-        label: "Receipt Management",
-        icon: FileBarChart,
-        path: "/cash/receipts",
-        description: "Generate and manage receipts",
-        subItems: [
-          {
-            id: "generate-receipt",
-            label: "Generate Receipt",
-            icon: Layout,
-            path: "/cash/receipts/generate",
-            description: "Create new receipts"
-          },
-          {
-            id: "receipt-templates",
-            label: "Receipt Templates",
-            icon: Layout,
-            path: "/cash/receipts/templates",
-            description: "Manage receipt formats"
-          },
-          {
-            id: "receipt-history",
-            label: "Receipt History",
-            icon: Archive,
-            path: "/cash/receipts/history",
-            description: "View all generated receipts"
-          }
-        ]
-      }
+      // {
+      //   id: "receipts",
+      //   label: "Receipt Management",
+      //   icon: FileBarChart,
+      //   path: "/cash/receipts",
+      //   description: "Generate and manage receipts",
+      //   subItems: [
+      //     {
+      //       id: "generate-receipt",
+      //       label: "Generate Receipt",
+      //       icon: Layout,
+      //       path: "/cash/receipts/generate",
+      //       description: "Create new receipts"
+      //     },
+      //     {
+      //       id: "receipt-templates",
+      //       label: "Receipt Templates",
+      //       icon: Layout,
+      //       path: "/cash/receipts/templates",
+      //       description: "Manage receipt formats"
+      //     },
+      //     {
+      //       id: "receipt-history",
+      //       label: "Receipt History",
+      //       icon: Archive,
+      //       path: "/cash/receipts/history",
+      //       description: "View all generated receipts"
+      //     }
+      //   ]
+      // }
     ]
   },
 

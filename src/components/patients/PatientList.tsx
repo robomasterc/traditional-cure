@@ -246,7 +246,7 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-300 text-gray-700">
                     <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="50">50page</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
                     <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
