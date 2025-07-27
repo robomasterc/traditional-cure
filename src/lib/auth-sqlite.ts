@@ -1,7 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getDataService } from './data-service';
-import { UserRole } from '@/types/auth';
 import { isSQLiteProvider } from '@/config/database';
 
 export const sqliteAuthOptions: NextAuthOptions = {
@@ -21,7 +20,7 @@ export const sqliteAuthOptions: NextAuthOptions = {
         try {
           const dataService = getDataService();
           
-          if ('authenticateUser' in dataService) {
+          if ('authenticateUser' in dataService && dataService.authenticateUser) {
             const user = await dataService.authenticateUser(credentials.email, credentials.password);
             
             if (user) {
@@ -46,7 +45,7 @@ export const sqliteAuthOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.roles = (user as any).roles;
+        token.roles = (user as unknown as { roles: string[] }).roles;
       }
       return token;
     },
@@ -79,7 +78,7 @@ export async function createInitialAdminUser(email: string, password: string, na
 
   const dataService = getDataService();
   
-  if ('createUser' in dataService) {
+  if ('createUser' in dataService && dataService.createUser) {
     await dataService.createUser(email, password, name, ['admin']);
     console.log('✅ Initial admin user created successfully');
   } else {

@@ -6,7 +6,6 @@
  */
 
 import { SQLiteService } from '../lib/sqlite';
-import { UserRole } from '../types/auth';
 
 async function initializeSQLite() {
   console.log('🚀 Initializing SQLite database...');

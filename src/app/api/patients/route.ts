@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     const dataService = getDataService();
 
-    if (isGoogleSheetsProvider() && 'appendRow' in dataService) {
+    if (isGoogleSheetsProvider() && 'appendRow' in dataService && dataService.appendRow) {
       // Prepare row data in the correct order as per SHEET_COLUMNS
       const rowData = [
         newPatient.id,
@@ -105,8 +105,11 @@ export async function POST(request: NextRequest) {
       ];
       console.log('Appending new patient to Google Sheets:', rowData);
       await dataService.appendRow(`${SHEET_NAMES.PATIENTS}!A:M`, rowData);
-    } else if (isSQLiteProvider() && 'appendRow' in dataService) {
-      // For SQLite, convert to database-friendly format
+    } else if (isSQLiteProvider()) {
+      // For SQLite, use the direct service since the interface doesn't match
+      const { SQLiteService } = await import('@/lib/sqlite');
+      const sqliteService = new SQLiteService();
+      
       const patientData = {
         id: newPatient.id,
         name: newPatient.name,
@@ -123,7 +126,7 @@ export async function POST(request: NextRequest) {
         updated_at: newPatient.updatedAt
       };
       console.log('Adding new patient to SQLite:', patientData);
-      await dataService.appendRow('patients', patientData);
+      await sqliteService.appendRow('patients', patientData);
     }
     
     return NextResponse.json(newPatient, { status: 201 });
@@ -166,7 +169,7 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isGoogleSheetsProvider() && 'updateRow' in dataService) {
+    if (isGoogleSheetsProvider() && 'updateRow' in dataService && dataService.updateRow) {
       // Prepare row data for update (row index + 2 because of header and 0-based index)
       const rowNumber = patientIndex + 2;
       const rowData = [
@@ -186,8 +189,11 @@ export async function PUT(request: NextRequest) {
       ];
 
       await dataService.updateRow(`${SHEET_NAMES.PATIENTS}!A${rowNumber}:M${rowNumber}`, rowData);
-    } else if (isSQLiteProvider() && 'updateRow' in dataService) {
-      // For SQLite, convert to database-friendly format
+    } else if (isSQLiteProvider()) {
+      // For SQLite, use the direct service since the interface doesn't match
+      const { SQLiteService } = await import('@/lib/sqlite');
+      const sqliteService = new SQLiteService();
+      
       const patientData = {
         name: updatedPatient.name,
         age: updatedPatient.age,
@@ -202,7 +208,7 @@ export async function PUT(request: NextRequest) {
         updated_at: updatedPatient.updatedAt
       };
       
-      await dataService.updateRow('patients', id, patientData);
+      await sqliteService.updateRow('patients', id, patientData);
     }
 
     return NextResponse.json(updatedPatient);
@@ -234,7 +240,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    if (isGoogleSheetsProvider() && 'updateRow' in dataService) {
+    if (isGoogleSheetsProvider() && 'updateRow' in dataService && dataService.updateRow) {
       // Note: Google Sheets API doesn't have a direct delete row method
       // We'll mark the patient as inactive by clearing the row data
       const rowNumber = patientIndex + 2;

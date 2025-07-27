@@ -17,10 +17,8 @@ import {
   Stethoscope,
   Calendar,
   History,
-  Search,
   Pill,
   Plus,
-  Archive,
   ClipboardList,
   Loader,
   CheckCircle2,
@@ -33,10 +31,8 @@ import {
   Building,
   AlertTriangle,
   AlertCircle,
-  Layout,
   Grid3x3,
   Edit,
-  FileBarChart,
 } from 'lucide-react';
 
 export interface MenuItem {

@@ -2,7 +2,7 @@ import { DefaultSession, NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { getUserRoles } from './data-service';
 import { UserRole } from '@/types/auth';
-import { getDatabaseConfig, isGoogleSheetsProvider } from '@/config/database';
+import { isGoogleSheetsProvider } from '@/config/database';
 import { sqliteAuthOptions } from './auth-sqlite';
 
 

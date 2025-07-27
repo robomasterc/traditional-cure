@@ -25,7 +25,7 @@ export interface DataService {
   // Write methods (for abstraction)
   appendRow?(range: string, values: (string | number | boolean)[]): Promise<void>;
   updateRow?(range: string, values: (string | number | boolean)[]): Promise<void>;
-  batchUpdate?(requests: any[]): Promise<void>;
+  batchUpdate?(requests: unknown[]): Promise<void>;
 }
 
 class DataServiceFactory {
@@ -46,7 +46,7 @@ class DataServiceFactory {
   }
 
   static resetInstance(): void {
-    DataServiceFactory.instance = null as any;
+    DataServiceFactory.instance = null as unknown as DataService;
   }
 }
 
@@ -110,8 +110,8 @@ class GoogleSheetsDataServiceAdapter implements DataService {
     return this.service.updateRow(range, values);
   }
 
-  async batchUpdate(requests: any[]): Promise<void> {
-    return this.service.batchUpdate(requests);
+  async batchUpdate(requests: unknown[]): Promise<void> {
+    return this.service.batchUpdate(requests as never);
   }
 }
 

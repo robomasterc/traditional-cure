@@ -207,7 +207,7 @@ export class SQLiteService {
 
   async authenticateUser(email: string, password: string): Promise<{ id: string; name: string; roles: UserRole[] } | null> {
     const stmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
-    const user = stmt.get(email) as any;
+    const user = stmt.get(email) as { id: string; password_hash: string; name: string; roles: string } | undefined;
     
     if (!user) return null;
 
@@ -233,20 +233,25 @@ export class SQLiteService {
   // Data access methods
   async getPatients(): Promise<Patient[]> {
     const stmt = this.db.prepare('SELECT * FROM patients ORDER BY created_at DESC');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; name: string; age: number; gender: string;
+      phone: string; email: string | null; district: string;
+      state: string; occupation: string; allergies: string | null;
+      emergency_contact: string | null; created_at: string; updated_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
       name: row.name,
       age: row.age,
-      gender: row.gender,
+      gender: row.gender as "Male" | "Female" | "Other",
       phone: row.phone,
-      email: row.email,
+      email: row.email || undefined,
       district: row.district,
       state: row.state,
       occupation: row.occupation,
-      allergies: row.allergies,
-      emergencyContact: row.emergency_contact,
+      allergies: row.allergies || undefined,
+      emergencyContact: row.emergency_contact || undefined,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at)
     }));
@@ -254,7 +259,12 @@ export class SQLiteService {
 
   async getConsultations(): Promise<Consultation[]> {
     const stmt = this.db.prepare('SELECT * FROM consultations ORDER BY date DESC');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; patient_id: string; doctor_id: string; date: string;
+      symptoms: string; diagnosis: string; pulse_reading: string;
+      treatment: string; follow_up_date: string | null; fees: number;
+      status: string; created_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
@@ -267,33 +277,41 @@ export class SQLiteService {
       treatment: row.treatment,
       followUpDate: row.follow_up_date ? new Date(row.follow_up_date) : undefined,
       fees: row.fees,
-      status: row.status,
+      status: row.status as "Pending" | "Completed" | "Follow-up",
       createdAt: new Date(row.created_at)
     }));
   }
 
   async getPrescriptions(): Promise<Prescription[]> {
     const stmt = this.db.prepare('SELECT * FROM prescriptions ORDER BY created_at DESC');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; consultation_id: string; medicines: string;
+      total_cost: number; status: string; created_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
       consultationId: row.consultation_id,
       medicines: JSON.parse(row.medicines),
       totalCost: row.total_cost,
-      status: row.status,
+      status: row.status as "Prescribed" | "Dispensed" | "Partial",
       createdAt: new Date(row.created_at)
     }));
   }
 
   async getInventoryItems(): Promise<InventoryItem[]> {
     const stmt = this.db.prepare('SELECT * FROM inventory ORDER BY name');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; name: string; category: string; stock: number;
+      unit: string; cost_price: number; selling_price: number;
+      supplier_id: string; expiry_date: string; reorder_level: number;
+      batch_number: string; description: string; created_at: string; updated_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
       name: row.name,
-      category: row.category,
+      category: row.category as "Herb" | "Oil" | "Powder" | "Tablet" | "Liquid",
       stock: row.stock,
       unit: row.unit,
       costPrice: row.cost_price,
@@ -314,17 +332,21 @@ export class SQLiteService {
 
   async getStaff(): Promise<Staff[]> {
     const stmt = this.db.prepare('SELECT * FROM staff ORDER BY name');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; name: string; role: string; email: string;
+      phone: string; salary: number; join_date: string;
+      status: string; permissions: string; created_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
       name: row.name,
-      role: row.role,
+      role: row.role as "admin" | "doctor" | "pharmacist" | "cash_manager" | "case_manager" | "stock_manager",
       email: row.email,
       phone: row.phone,
       salary: row.salary,
       joinDate: new Date(row.join_date),
-      status: row.status,
+      status: row.status as "Active" | "Inactive",
       permissions: JSON.parse(row.permissions),
       createdAt: new Date(row.created_at)
     }));
@@ -332,17 +354,21 @@ export class SQLiteService {
 
   async getTransactions(): Promise<Transaction[]> {
     const stmt = this.db.prepare('SELECT * FROM transactions ORDER BY date DESC');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; type: string; category: string; cash: number;
+      upi: number; description: string; patient_id: string | null;
+      staff_id: string | null; date: string; created_by: string; created_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
-      type: row.type,
+      type: row.type as "Income" | "Expense",
       category: row.category,
       cash: row.cash,
       upi: row.upi,
       description: row.description,
-      patientId: row.patient_id,
-      staffId: row.staff_id,
+      patientId: row.patient_id || undefined,
+      staffId: row.staff_id || undefined,
       date: new Date(row.date),
       createdBy: row.created_by,
       createdAt: new Date(row.created_at)
@@ -351,7 +377,10 @@ export class SQLiteService {
 
   async getSuppliers(): Promise<Supplier[]> {
     const stmt = this.db.prepare('SELECT * FROM suppliers ORDER BY name');
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as Array<{
+      id: string; name: string; contact: string; phone: string;
+      email: string; address: string; speciality: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
@@ -369,7 +398,7 @@ export class SQLiteService {
       SELECT * FROM orders 
       WHERE supplier_id = 'ADJUSTMENT'
     `;
-    const params: any[] = [];
+    const params: string[] = [];
     
     if (startDate && endDate) {
       query += ' AND order_date BETWEEN ? AND ?';
@@ -385,7 +414,11 @@ export class SQLiteService {
     query += ' ORDER BY order_date DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params) as any[];
+    const rows = stmt.all(...params) as Array<{
+      id: string; item_id: string; item_name: string; quantity: number;
+      unit_price: number; total: number; notes: string | null;
+      order_date: string; created_by: string; created_at: string;
+    }>;
     
     return rows.map(row => ({
       id: row.id,
@@ -404,7 +437,7 @@ export class SQLiteService {
   }
 
   // Write methods
-  async appendRow(table: string, data: Record<string, any>): Promise<void> {
+  async appendRow(table: string, data: Record<string, unknown>): Promise<void> {
     const columns = Object.keys(data);
     const placeholders = columns.map(() => '?').join(', ');
     const values = Object.values(data);
@@ -417,7 +450,7 @@ export class SQLiteService {
     stmt.run(...values);
   }
 
-  async updateRow(table: string, id: string, data: Record<string, any>): Promise<void> {
+  async updateRow(table: string, id: string, data: Record<string, unknown>): Promise<void> {
     const columns = Object.keys(data);
     const setClause = columns.map(col => `${col} = ?`).join(', ');
     const values = [...Object.values(data), id];

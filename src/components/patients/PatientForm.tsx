@@ -103,7 +103,6 @@ export function PatientForm({ patient, onSuccess, onCancel, isDialog = false }: 
         occupation: formData.occupation.trim(),
         allergies: formData.allergies.trim() || undefined,
         emergencyContact: formData.emergencyContact.trim() || undefined,
-        emergencyContact: formData.emergencyContact.trim(),
       };
 
       let result;

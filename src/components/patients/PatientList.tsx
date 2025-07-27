@@ -404,18 +404,12 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                   <span className="line-clamp-1">{patient.district}, {patient.state}</span>
                 </div>
 
-                {(patient.occupation || patient.medicalHistory) && (
+                {patient.occupation && (
                   <div className="pt-2 border-t">
                     {patient.occupation && (
                       <div className="flex items-center text-sm text-blue-600 mb-1">
                         <User className="h-4 w-4 mr-2" />
                         <span className="line-clamp-1">Occupation: {patient.occupation}</span>
-                      </div>
-                    )}
-                    {patient.medicalHistory && (
-                      <div className="flex items-center text-sm text-blue-600">
-                        <Heart className="h-4 w-4 mr-2" />
-                        <span className="line-clamp-1">Medical History</span>
                       </div>
                     )}
                   </div>
@@ -508,13 +502,13 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                               {patient.occupation}
                             </div>
                           )}
-                          {patient.medicalHistory && (
+                          {patient.allergies && (
                             <div className="flex items-center text-xs text-blue-600">
                               <Heart className="h-3 w-3 mr-1" />
                               Medical History
                             </div>
                           )}
-                          {!patient.occupation && !patient.medicalHistory && (
+                          {!patient.occupation && !patient.allergies && (
                             <span className="text-xs text-gray-400">None</span>
                           )}
                         </div>
@@ -634,11 +628,11 @@ export function PatientList({ showAddButton = true, onPatientSelect, selectable 
                 </div>
               </div>
 
-              {selectedPatient.medicalHistory && (
+              {selectedPatient.allergies && (
                 <div>
                   <Label className="text-sm font-semibold text-gray-700">Medical History</Label>
                   <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm">
-                    {selectedPatient.medicalHistory}
+                    {selectedPatient.allergies}
                   </div>
                 </div>
               )}

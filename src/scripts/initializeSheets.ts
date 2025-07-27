@@ -26,7 +26,7 @@ const randomDate = (start: Date, end: Date) => new Date(start.getTime() + Math.r
 const generatePatients = (count: number): Patient[] => {
   const patients: Patient[] = [];
   const names = ['Rajesh Kumar', 'Priya Sharma', 'Amit Patel', 'Sneha Gupta', 'Vikram Singh', 'Anjali Verma', 'Rahul Mehta', 'Pooja Shah', 'Deepak Joshi', 'Meera Kapoor'];
-  const addresses = ['123 Main Street, Mumbai', '456 Park Avenue, Delhi', '789 Lake View, Bangalore', '321 Garden Road, Chennai', '654 Hill Street, Kolkata'];
+  //const addresses = ['123 Main Street, Mumbai', '456 Park Avenue, Delhi', '789 Lake View, Bangalore', '321 Garden Road, Chennai', '654 Hill Street, Kolkata'];
 
   for (let i = 0; i < count; i++) {
     const createdAt = randomDate(new Date('2023-01-01'), new Date());
@@ -40,7 +40,7 @@ const generatePatients = (count: number): Patient[] => {
       email: `patient${i + 1}@example.com`,
       district: ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata'][i % 5],
       state: ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'West Bengal'][i % 5],
-      medicalHistory: 'Hypertension, Diabetes Type 2',
+      //medicalHistory: 'Hypertension, Diabetes Type 2',
       occupation: ['Engineer', 'Teacher', 'Doctor', 'Business', 'Student'][i % 5],
       emergencyContact: `+91-${Math.floor(Math.random() * 9000000000) + 1000000000}`,
       createdAt,
